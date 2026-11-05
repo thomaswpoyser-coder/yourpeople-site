@@ -488,6 +488,7 @@
           </div>
         </div>
         <p class="hint hidden" id="site-photo-setup">Photo uploads need a one-time setup that hasn&rsquo;t been done yet, so photos can&rsquo;t be added just now. Everything else on this page still saves. Tell the person who runs Your People &mdash; it&rsquo;s the Step 24 update.</p>
+        <p class="hint hidden" id="site-photo-cap">Your page shows up to 4 photos &mdash; remove one to add another.</p>
       </div>
     </section>
 
@@ -1900,6 +1901,70 @@ function sitePhotoUrl(path) {
     return data && data.publicUrl ? data.publicUrl : null;
   } catch (_e) { return null; }
 }
+/* ---------- site photo bounds ----------
+   The public page carries at most SITE_PHOTO_MAX photos, and
+   uploads are shrunk here, before they travel: longest side at
+   most SITE_PHOTO_MAX_EDGE px, re-encoded as JPEG (white behind
+   any transparency) — the same client-side downscale the app
+   does for logos. The public page's own editor holds the same
+   two bounds. A photo already JPEG and inside the bounds is
+   uploaded untouched, and one that cannot be decoded is
+   uploaded as-is rather than refused: the resize is a courtesy,
+   never a gate. Every write of the list is trimmed to the cap,
+   so even a stale client cannot save a longer list. ---------- */
+const SITE_PHOTO_MAX = 4;
+const SITE_PHOTO_MAX_EDGE = 1024;
+const SITE_PHOTO_CAP_MSG = 'Your page shows up to ' + SITE_PHOTO_MAX + ' photos — remove one to add another.';
+function photoTargetSize(width, height) {
+  const longest = Math.max(width || 0, height || 0);
+  if (!longest || longest <= SITE_PHOTO_MAX_EDGE) return null;
+  const k = SITE_PHOTO_MAX_EDGE / longest;
+  return {
+    width: Math.max(1, Math.round((width || 0) * k)),
+    height: Math.max(1, Math.round((height || 0) * k)),
+  };
+}
+async function decodeSitePhoto(file) {
+  if (typeof createImageBitmap === 'function') {
+    try { return await createImageBitmap(file); } catch (_e) { /* fall through to the Image path */ }
+  }
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('photo decode failed')); };
+    img.src = url;
+  });
+}
+async function prepareSitePhoto(file) {
+  const original = { blob: file, name: file && file.name ? file.name : 'photo', resized: false };
+  let bmp = null;
+  try { bmp = await decodeSitePhoto(file); } catch (_e) { return original; }
+  const w = bmp.naturalWidth || bmp.width || 0;
+  const hgt = bmp.naturalHeight || bmp.height || 0;
+  const target = photoTargetSize(w, hgt);
+  const isJpeg = ((file && file.type) || '').toLowerCase() === 'image/jpeg';
+  if (!target && isJpeg) {
+    if (bmp.close) bmp.close();
+    return original;
+  }
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = target ? target.width : w;
+    canvas.height = target ? target.height : hgt;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    if (bmp.close) bmp.close();
+    if (!blob) return original;
+    const base = (file.name || 'photo').replace(/\.[^.]*$/, '');
+    return { blob, name: base + '.jpg', resized: true };
+  } catch (_e) {
+    return original;
+  }
+}
 async function loadSiteSettings() {
   const m = currentMembership();
   if (!m) return;
@@ -1942,7 +2007,7 @@ async function saveSiteSettings(successText) {
   site.address = $('site-address').value.trim();
   site.linkedYouthCode = $('site-youth-code').value.trim().toUpperCase();
   site.ministries = siteMinistriesClean(S.siteMinistries);
-  site.photos = [...S.sitePhotos];
+  site.photos = [...S.sitePhotos].slice(0, SITE_PHOTO_MAX);
   const next = { ...S.settings, site, tithelyUrl: $('site-giving').value.trim() };
   const { error } = await client.from('groups').update({ settings: next }).eq('id', S.groupId);
   if (error) {
@@ -1950,6 +2015,7 @@ async function saveSiteSettings(successText) {
     return false;
   }
   S.settings = next;
+  S.sitePhotos = [...site.photos];
   setMsg('site-msg', successText || 'Saved — your church site shows it now.', 'ok');
   return true;
 }
@@ -2130,6 +2196,7 @@ $('site-slug-save').addEventListener('click', async () => {
 function renderSitePhotos() {
   const box = $('site-photos');
   box.replaceChildren();
+  syncSitePhotoControls();
   if (S.sitePhotos.length === 0) {
     box.appendChild(h('p', 'muted', 'No photos yet — your site looks complete without them, and you can add some any time.'));
     return;
@@ -2163,21 +2230,42 @@ async function probeSiteBucket() {
   }
   renderSiteBucketState();
 }
+/* The add-photo controls and the two notes below them (setup
+   pending / at the photo cap) are mutually exclusive states of
+   the same corner of the tab; this keeps them in step whenever
+   the list or the bucket probe changes. Before the probe
+   answers, the bucket-driven states are left as they are and
+   only the cap is applied. */
+function syncSitePhotoControls() {
+  const atCap = S.sitePhotos.length >= SITE_PHOTO_MAX;
+  if (S.siteBucketOk !== null) {
+    const ready = S.siteBucketOk === true;
+    $('site-photo-controls').classList.toggle('hidden', !ready || atCap);
+    $('site-photo-setup').classList.toggle('hidden', ready);
+  } else if (atCap) {
+    $('site-photo-controls').classList.add('hidden');
+  }
+  $('site-photo-cap').classList.toggle('hidden', !(atCap && S.siteBucketOk !== false));
+}
 function renderSiteBucketState() {
-  const ready = S.siteBucketOk === true;
-  $('site-photo-controls').classList.toggle('hidden', !ready);
-  $('site-photo-setup').classList.toggle('hidden', ready);
+  syncSitePhotoControls();
 }
 $('site-photo-upload').addEventListener('click', async () => {
   const input = $('site-photo-file');
   const file = input.files && input.files[0];
   if (!file) { setMsg('site-photos-msg', 'Choose a photo first.', 'err'); return; }
+  if (S.sitePhotos.length >= SITE_PHOTO_MAX) {
+    setMsg('site-photos-msg', SITE_PHOTO_CAP_MSG, 'err');
+    return;
+  }
   const btn = $('site-photo-upload');
   btn.disabled = true;
   setMsg('site-photos-msg', 'Adding your photo…');
-  const safeName = (file.name || 'photo').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-60);
+  const prepared = await prepareSitePhoto(file);
+  const safeName = (prepared.name || 'photo').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-60);
   const path = S.groupId + '/' + Date.now() + '-' + safeName;
-  const { error } = await client.storage.from('church-site-photos').upload(path, file);
+  const opts = prepared.blob && prepared.blob.type ? { contentType: prepared.blob.type } : undefined;
+  const { error } = await client.storage.from('church-site-photos').upload(path, prepared.blob, opts);
   btn.disabled = false;
   if (error) {
     const m = (error.message || '').toLowerCase();

@@ -316,10 +316,11 @@
       <section class="block hidden" id="sec-photos-edit">
         <h2>Church photos</h2>
         <div class="photo-strip" id="photo-strip"></div>
-        <p style="margin:14px 0 0">
+        <p style="margin:14px 0 0" id="photo-add-row">
           <input type="file" id="photo-add-file" accept="image/*">
           <button type="button" class="btn small" id="photo-add">Add photo</button>
         </p>
+        <p class="edit-note hidden" id="photo-cap-note" style="margin-top:14px">Your page shows up to 4 photos &mdash; remove one to add another.</p>
         <p class="edit-note" style="margin-top:12px">The first photo is the banner across the top of this page.</p>
       </section>
 
@@ -361,6 +362,6 @@
      ?v= on the script tag is bumped whenever the renderer
      changes, so a just-updated page is never masked by a
      browser's cached copy of the previous renderer. -->
-<script src="/site/church-site.js?v=5"></script>
+<script src="/site/church-site.js?v=6"></script>
 </body>
 </html>

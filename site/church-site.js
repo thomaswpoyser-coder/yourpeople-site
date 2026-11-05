@@ -70,6 +70,14 @@
 const SUPABASE_URL = 'https://wsmqkhljjhaueahqizfr.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_4eoGwVeVNyN7jn-wmJsUkg_nShqdukt';
 const PHOTO_PREFIX = SUPABASE_URL + '/storage/v1/object/public/church-site-photos/';
+/* Photo bounds (v5): the page carries at most SITE_PHOTO_MAX
+   photos, and uploads are shrunk on the leader's own device
+   before they travel — longest side at most SITE_PHOTO_MAX_EDGE
+   px, re-encoded as JPEG. The desk's site tab holds the same
+   two bounds. Neither changes where photos sit on the page. */
+const SITE_PHOTO_MAX = 4;
+const SITE_PHOTO_MAX_EDGE = 1024;
+const SITE_PHOTO_CAP_MSG = 'Your page shows up to ' + SITE_PHOTO_MAX + ' photos — remove one to add another.';
 
 const $ = (id) => document.getElementById(id);
 function h(tag, className, text) {
@@ -769,7 +777,7 @@ async function saveEdit() {
     welcome: $('ed-welcome').value.trim(),
     serviceTimes: $('ed-times').value.trim(),
     address: $('ed-address').value.trim(),
-    photos: [...PAGE.photoPaths],
+    photos: [...PAGE.photoPaths].slice(0, SITE_PHOTO_MAX),
     ministries: cleanMinistries(PAGE.ministries),
   };
   const ok = await writeSettings(fields, giving);
@@ -792,7 +800,66 @@ async function saveEdit() {
 
 /* Photos: uploaded and saved as they change (the desk's pattern),
    under this church's own folder in the church-site-photos
-   bucket, where the Step 24 rules keep writes leader-only. */
+   bucket, where the Step 24 rules keep writes leader-only.
+   Two bounds ride along: at most SITE_PHOTO_MAX photos (the
+   add control steps aside for the cap message at the limit,
+   and every write of the list is trimmed to the cap), and each
+   upload is downscaled first — the same client-side courtesy
+   the app does for logos. A photo already JPEG and inside the
+   bounds travels untouched, and one that cannot be decoded
+   travels as-is: the resize never refuses an upload. */
+function photoTargetSize(width, height) {
+  const longest = Math.max(width || 0, height || 0);
+  if (!longest || longest <= SITE_PHOTO_MAX_EDGE) return null;
+  const k = SITE_PHOTO_MAX_EDGE / longest;
+  return {
+    width: Math.max(1, Math.round((width || 0) * k)),
+    height: Math.max(1, Math.round((height || 0) * k)),
+  };
+}
+async function decodeSitePhoto(file) {
+  if (typeof createImageBitmap === 'function') {
+    try { return await createImageBitmap(file); } catch (e) { /* fall through to the Image path */ }
+  }
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('photo decode failed')); };
+    img.src = url;
+  });
+}
+async function prepareSitePhoto(file) {
+  const original = { blob: file, name: file && file.name ? file.name : 'photo', resized: false };
+  let bmp = null;
+  try { bmp = await decodeSitePhoto(file); } catch (e) { return original; }
+  const w = bmp.naturalWidth || bmp.width || 0;
+  const hgt = bmp.naturalHeight || bmp.height || 0;
+  const target = photoTargetSize(w, hgt);
+  const isJpeg = ((file && file.type) || '').toLowerCase() === 'image/jpeg';
+  if (!target && isJpeg) {
+    if (bmp.close) bmp.close();
+    return original;
+  }
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = target ? target.width : w;
+    canvas.height = target ? target.height : hgt;
+    const ctx = canvas.getContext('2d');
+    /* White behind the picture, so a transparent PNG keeps its
+       look when it becomes a JPEG instead of going black. */
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    if (bmp.close) bmp.close();
+    if (!blob) return original;
+    const base = (file.name || 'photo').replace(/\.[^.]*$/, '');
+    return { blob, name: base + '.jpg', resized: true };
+  } catch (e) {
+    return original;
+  }
+}
 function renderPhotoStrip() {
   const box = $('photo-strip');
   box.replaceChildren();
@@ -813,18 +880,23 @@ function renderPhotoStrip() {
     box.appendChild(fig);
   });
   $('hero-photo-btns').classList.toggle('hidden', !(PAGE.editing && PAGE.photoPaths.length > 0));
+  const atCap = PAGE.photoPaths.length >= SITE_PHOTO_MAX;
+  $('photo-add-row').classList.toggle('hidden', atCap);
+  $('photo-cap-note').classList.toggle('hidden', !atCap);
 }
 function safeName(name) {
   return (name || 'photo').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-60);
 }
 async function uploadPhoto(file) {
-  const path = PAGE.data.groupId + '/' + Date.now() + '-' + safeName(file.name);
-  const { error } = await PAGE.client.storage.from('church-site-photos').upload(path, file);
+  const prepared = await prepareSitePhoto(file);
+  const path = PAGE.data.groupId + '/' + Date.now() + '-' + safeName(prepared.name);
+  const opts = prepared.blob && prepared.blob.type ? { contentType: prepared.blob.type } : undefined;
+  const { error } = await PAGE.client.storage.from('church-site-photos').upload(path, prepared.blob, opts);
   if (error) return null;
   return path;
 }
 async function persistPhotos(msg) {
-  const site = { ...(PAGE.settings && PAGE.settings.site ? PAGE.settings.site : {}), photos: [...PAGE.photoPaths] };
+  const site = { ...(PAGE.settings && PAGE.settings.site ? PAGE.settings.site : {}), photos: [...PAGE.photoPaths].slice(0, SITE_PHOTO_MAX) };
   const tithely = PAGE.settings && typeof PAGE.settings.tithelyUrl === 'string' ? PAGE.settings.tithelyUrl : '';
   const ok = await writeSettings(site, tithely);
   if (!ok) {
@@ -836,6 +908,7 @@ async function persistPhotos(msg) {
   barMsg(msg, 'ok');
 }
 async function addPhoto() {
+  if (PAGE.photoPaths.length >= SITE_PHOTO_MAX) { barMsg(SITE_PHOTO_CAP_MSG, 'err'); return; }
   const input = $('photo-add-file');
   const file = input.files && input.files[0];
   if (!file) { barMsg('Choose a photo first.', 'err'); return; }
