@@ -29,14 +29,14 @@
   label:first-child{margin-top:0}
   input[type=text],input[type=email],input[type=password],input[type=datetime-local],
   select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);
-    border-radius:10px;background:#fff;font:inherit;color:var(--ink)}
+    border-radius:10px;background:var(--cream);font:inherit;color:var(--ink)}
   textarea{resize:vertical}
   .hint{color:var(--muted);font-size:13px;margin:4px 0 0}
   .btn{display:inline-block;background:var(--green);color:#fff;border:1px solid var(--green);
     border-radius:10px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer}
   .btn:hover{background:var(--green-deep)}
   .btn:disabled{opacity:.55;cursor:default}
-  .btn.secondary{background:#fff;color:var(--green)}
+  .btn.secondary{background:var(--card);color:var(--green)}
   .btn.secondary:hover{background:var(--soft)}
   .btn.danger{background:#fff;color:var(--danger);border-color:#E3B7B3}
   .btn.danger:hover{background:#FBEEEE}
@@ -57,11 +57,11 @@
   .joincode{font-size:14px;color:var(--muted)}
   .joincode strong{color:var(--green);letter-spacing:.6px}
   .tabs{display:flex;gap:8px;margin:0 0 20px;flex-wrap:wrap}
-  .tabs button{background:#fff;border:1px solid var(--line);color:var(--green);
+  .tabs button{background:var(--card);border:1px solid var(--line);color:var(--green);
     border-radius:999px;padding:8px 18px;font:inherit;font-weight:600;cursor:pointer}
   .tabs button.active{background:var(--green);color:#fff;border-color:var(--green)}
   .sectiontitle{font-size:21px;color:var(--green-deep);font-weight:normal;margin:6px 0 14px}
-  .staticitem{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 12px;background:#fff}
+  .staticitem{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 12px;background:var(--card)}
   .staticitem .t{font-weight:700;font-size:16.5px}
   .staticitem .s{color:var(--muted);font-size:13.5px;margin-top:2px}
   .bodytext{white-space:pre-wrap;word-wrap:break-word}
@@ -76,6 +76,32 @@
   .person .contact a{color:var(--green)}
   footer.foot{margin-top:36px;font-size:13.5px;color:var(--muted);text-align:center}
   footer.foot a{color:var(--green)}
+  /* the signed-in church's own brand (applied by applyBrand below) */
+  .brandlogo{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;
+    border:1px solid var(--line);background:var(--card)}
+  html[data-theme="dark"] .wordmark{color:var(--ink)}
+  html[data-theme="dark"] .sectiontitle{color:var(--ink)}
+  /* sermons (mirrors the youth desk's lesson editor) */
+  .badge{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.4px;
+    text-transform:uppercase;border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:2px}
+  .badge.draft{background:#F7EBCB;color:#7A5B12}
+  .badge.live{background:#DDEBDF;color:var(--ok)}
+  .listitem{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;padding:13px 15px;margin:0 0 10px;cursor:pointer;font:inherit;color:var(--ink)}
+  .listitem:hover{border-color:var(--gold)}
+  .listitem.active{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
+  .listitem .t{font-weight:700;display:block}
+  .listitem .s{color:var(--muted);font-size:13.5px;display:block;margin-top:2px}
+  textarea.tall{min-height:280px}
+  .assistbox{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:18px 0 4px}
+  .assistbox .ah{font-weight:700;color:var(--green);margin:0 0 8px}
+  .assistbox .btn{padding:7px 13px;font-size:14px}
+  /* your church site — photos */
+  .photogrid{display:flex;flex-wrap:wrap;gap:12px;margin:6px 0 4px}
+  .photogrid figure{margin:0;width:150px}
+  .photogrid img{width:150px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}
+  .photogrid figcaption{margin-top:5px;text-align:center}
+  input[type=file]{font:inherit;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -124,7 +150,7 @@
   <!-- the desk -->
   <div id="view-app" class="hidden">
     <header class="top">
-      <span class="wordmark small"><span class="mark">&#10022;</span>your people</span>
+      <span class="wordmark small"><img id="brand-logo" class="brandlogo hidden" alt=""><span class="mark">&#10022;</span>your people</span>
       <div class="who">
         <div><strong id="who-name">Member</strong></div>
         <div id="who-email"></div>
@@ -143,7 +169,9 @@
     <nav class="tabs">
       <button type="button" id="tab-announcements" class="active">Announcements</button>
       <button type="button" id="tab-events">Calendar</button>
+      <button type="button" id="tab-sermons">Sermons</button>
       <button type="button" id="tab-directory">Directory</button>
+      <button type="button" id="tab-site">Your church site</button>
     </nav>
 
     <!-- announcements -->
@@ -190,6 +218,87 @@
       <h2 class="sectiontitle">Coming up</h2>
       <p class="msg" id="events-msg"></p>
       <div id="event-list"></div>
+    </section>
+
+    <!-- sermons -->
+    <section id="pane-sermons" class="hidden">
+      <div class="card" id="sermon-form-card">
+        <h2 class="sectiontitle" id="sermon-editor-heading" style="margin-top:0">Write a sermon or lesson</h2>
+        <p class="hint" style="margin:0 0 6px">The teaching itself, in your words &mdash; your church reads it in the Bible tab of the app. A video is only ever a supporting extra, never the sermon itself.</p>
+        <form id="sermon-form">
+          <label for="sf-title">Title</label>
+          <input type="text" id="sf-title" maxlength="200" placeholder="e.g. The Good Shepherd">
+          <label for="sf-passage">Passage</label>
+          <input type="text" id="sf-passage" maxlength="200" placeholder="e.g. John 10:11&ndash;18">
+          <label for="sf-body">Sermon / lesson</label>
+          <textarea class="tall" id="sf-body" placeholder="Write the sermon or lesson&hellip;"></textarea>
+
+          <div class="assistbox" id="assist-box">
+            <p class="ah">Lesson / sermon assist</p>
+            <div class="btnrow" style="margin-top:0" id="assist-buttons">
+              <button class="btn secondary" type="button" data-assist="draft">Draft from my notes</button>
+              <button class="btn secondary" type="button" data-assist="outline">Outline from this passage</button>
+              <button class="btn secondary" type="button" data-assist="questions">Discussion questions</button>
+              <button class="btn secondary" type="button" data-assist="tighten">Tighten this up</button>
+            </div>
+            <p class="msg" id="assist-msg" style="margin-bottom:0"></p>
+          </div>
+
+          <label for="sf-closing">Closing line <span class="muted">(optional)</span></label>
+          <input type="text" id="sf-closing" maxlength="300" placeholder="e.g. This week, talk to God about&hellip;">
+          <p class="hint">One line to carry into the week &mdash; it appears at the end of the sermon.</p>
+          <label for="sf-video">Supporting video link <span class="muted">(YouTube, optional)</span></label>
+          <input type="text" id="sf-video" maxlength="500" placeholder="https://&hellip;">
+          <div class="btnrow">
+            <button class="btn" type="submit" id="sf-publish">Post sermon</button>
+            <button class="btn secondary" type="button" id="sf-draft">Save draft</button>
+            <button class="btn danger hidden" type="button" id="sf-delete">Delete</button>
+          </div>
+          <p class="msg" id="sf-msg"></p>
+        </form>
+      </div>
+      <div class="btnrow" style="margin:0 0 14px">
+        <button class="btn secondary" type="button" id="sermon-new">New sermon</button>
+      </div>
+      <h2 class="sectiontitle">Sermons and lessons</h2>
+      <p class="msg" id="sermons-msg"></p>
+      <div id="sermon-list"></div>
+    </section>
+
+    <!-- your church site -->
+    <section id="pane-site" class="hidden">
+      <div class="card">
+        <h2 class="sectiontitle" style="margin-top:0">Your church site</h2>
+        <p class="hint" style="margin:0 0 10px">Your church already has a public page &mdash; it builds itself from your logo, your colours, your calendar and your announcements, with nothing for you to set up. Fill in anything below to make it more your own; every part is optional, and you can change it any time.</p>
+        <p style="margin:0 0 6px"><a id="site-view-link" href="#" target="_blank" rel="noopener">View your church site</a></p>
+        <form id="site-form">
+          <label for="site-welcome">Welcome text</label>
+          <textarea id="site-welcome" rows="3" maxlength="2000" placeholder="A few words for someone finding your church for the first time&hellip;"></textarea>
+          <label for="site-times">Service times</label>
+          <textarea id="site-times" rows="3" maxlength="1000" placeholder="One per line, e.g. Sunday worship &mdash; 10:30 am"></textarea>
+          <label for="site-address">Address</label>
+          <input type="text" id="site-address" maxlength="300" placeholder="e.g. 123 Main Street, Centreville">
+          <label for="site-giving">Giving link</label>
+          <input type="text" id="site-giving" maxlength="500" placeholder="https://&hellip;">
+          <p class="hint">Your church&rsquo;s own giving page. The same link powers the Give button in the app.</p>
+          <div class="btnrow">
+            <button class="btn" type="submit" id="site-save">Save site details</button>
+          </div>
+          <p class="msg" id="site-msg"></p>
+        </form>
+
+        <label style="margin-top:22px">Church photos</label>
+        <p class="hint" style="margin-top:0">Photos appear on your church site &mdash; the first one becomes the banner across the top.</p>
+        <div class="photogrid" id="site-photos"></div>
+        <p class="msg" id="site-photos-msg"></p>
+        <div id="site-photo-controls">
+          <input type="file" id="site-photo-file" accept="image/*">
+          <div class="btnrow">
+            <button class="btn secondary" type="button" id="site-photo-upload">Add photo</button>
+          </div>
+        </div>
+        <p class="hint hidden" id="site-photo-setup">Photo uploads need a one-time setup that hasn&rsquo;t been done yet, so photos can&rsquo;t be added just now. Everything else on this page still saves. Tell the person who runs Your People &mdash; it&rsquo;s the Step 24 update.</p>
+      </div>
     </section>
 
     <!-- directory -->
@@ -274,10 +383,14 @@ function toLocalInput(iso) {
 /* ---------- state ---------- */
 const S = {
   user: null, profile: null,
-  memberships: [],           // [{group:{id,name,join_code,kind,created_by}, role}]
+  memberships: [],           // [{group:{id,name,join_code,kind,created_by,brand,logo_url}, role}]
   groupId: null,
-  announcements: [], events: [], directory: [],
-  editingAnnId: null, editingEventId: null,
+  announcements: [], events: [], directory: [], sermons: [],
+  editingAnnId: null, editingEventId: null, editingSermonId: null,
+  assistOk: null,            // sermon-assist probe result (null = not probed yet)
+  settings: null,            // current group's settings jsonb (site tab)
+  sitePhotos: [],            // settings.site.photos — storage paths
+  siteBucketOk: null,        // church-site-photos bucket probe (null = not probed)
 };
 function currentMembership() {
   return S.memberships.find((m) => m.group.id === S.groupId) || null;
@@ -288,6 +401,67 @@ function isLeaderHere() {
 }
 function roleLabel(role) {
   return role === 'leader' ? 'Leader' : 'Member';
+}
+
+/* ---------- the church's own brand ----------
+   Signed in, the desk wears the current church's look — the same
+   groups.brand the app themes itself from. The church's logo sits
+   next to the wordmark, palette.brand/deep become the desk's
+   greens, palette.accent its gold, and a dark-mode brand turns the
+   whole desk dark (background/surface/text/muted). A group with no
+   brand palette yet keeps the platform look, and signing out
+   restores it. Only plain #rrggbb values are ever applied, so a
+   hand-edited brand row cannot inject CSS. ---------------------- */
+const PLATFORM_VARS = {
+  '--cream': '#FAF8F3', '--green': '#2E493A', '--green-deep': '#22382C',
+  '--gold': '#C9A227', '--ink': '#2B2B28', '--muted': '#6B6F66',
+  '--card': '#FFFFFF', '--line': '#E4DFD2', '--soft': '#F1EDE1',
+};
+function hexOk(v) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v.trim()); }
+function mixHex(a, b, t) {
+  const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+  const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+  const c = pa.map((v, i) => Math.round(v + (pb[i] - v) * t));
+  return 'rgb(' + c.join(',') + ')';
+}
+function applyBrand(group) {
+  const root = document.documentElement;
+  const logo = $('brand-logo');
+  if (group && group.logo_url) {
+    logo.src = group.logo_url;
+    logo.classList.remove('hidden');
+  } else {
+    logo.classList.add('hidden');
+    logo.removeAttribute('src');
+  }
+  const brand = group && group.brand && typeof group.brand === 'object' ? group.brand : null;
+  const pal = brand && brand.palette && typeof brand.palette === 'object' ? brand.palette : null;
+  if (!pal || !hexOk(pal.brand)) { clearBrandVars(); return; }
+  const set = (k, v) => { if (hexOk(v)) root.style.setProperty(k, v.trim()); };
+  set('--green', pal.brand);
+  set('--green-deep', pal.deep);
+  set('--gold', pal.accent);
+  set('--cream', pal.background);
+  set('--card', pal.surface);
+  set('--ink', pal.text);
+  set('--muted', pal.muted);
+  if (hexOk(pal.background) && hexOk(pal.text)) {
+    root.style.setProperty('--line', mixHex(pal.background, pal.text, 0.16));
+  }
+  if (hexOk(pal.background) && hexOk(pal.brand)) {
+    root.style.setProperty('--soft', mixHex(pal.background, pal.brand, 0.07));
+  }
+  root.dataset.theme = brand.mode === 'dark' ? 'dark' : 'light';
+}
+function clearBrandVars() {
+  const root = document.documentElement;
+  for (const k of Object.keys(PLATFORM_VARS)) root.style.setProperty(k, PLATFORM_VARS[k]);
+  delete root.dataset.theme;
+}
+function clearBrand() {
+  clearBrandVars();
+  const logo = $('brand-logo');
+  if (logo) { logo.classList.add('hidden'); logo.removeAttribute('src'); }
 }
 
 /* ---------- views ---------- */
@@ -335,6 +509,8 @@ client.auth.onAuthStateChange((_event, session) => {
     }
   } else {
     S.user = null; S.profile = null; S.memberships = []; S.groupId = null;
+    S.settings = null; S.sitePhotos = []; S.siteBucketOk = null;
+    clearBrand();
     showView('view-signin');
   }
 });
@@ -361,7 +537,7 @@ async function loadAccount() {
   if (rows.length === 0) { showView('view-nogroup'); return; }
 
   const ids = rows.map((r) => r.group_id);
-  const grp = await client.from('groups').select('id, name, join_code, kind, created_by').in('id', ids);
+  const grp = await client.from('groups').select('id, name, join_code, kind, created_by, brand, logo_url').in('id', ids);
   if (grp.error) {
     $('nogroup-text').textContent =
       'We could not load your groups just now (' + grp.error.message + '). Try signing out and back in; if it keeps happening, tell the person who runs Your People.';
@@ -399,12 +575,17 @@ $('group-select').addEventListener('change', () => {
   S.groupId = $('group-select').value;
   cancelAnnEdit();
   cancelEventEdit();
+  S.editingSermonId = null;
+  S.settings = null;
+  S.sitePhotos = [];
+  S.siteBucketOk = null;
   applyGroup();
 });
 
 function applyGroup() {
   const m = currentMembership();
   if (!m) return;
+  applyBrand(m.group);
   $('group-code').textContent = m.group.join_code || '';
   let role = roleLabel(m.role);
   if (m.group.created_by && S.user && m.group.created_by === S.user.id) role += ' · you set this church up';
@@ -412,21 +593,34 @@ function applyGroup() {
   const leader = isLeaderHere();
   $('ann-form-card').classList.toggle('hidden', !leader);
   $('event-form-card').classList.toggle('hidden', !leader);
+  $('sermon-form-card').classList.toggle('hidden', !leader);
+  $('sermon-new').classList.toggle('hidden', !leader);
+  $('tab-site').classList.toggle('hidden', !leader);
   loadAnnouncements();
   loadEvents();
+  loadSermons();
   loadDirectory();
+  if (leader) {
+    resetSermonEditor();
+    probeAssist();
+    loadSiteSettings();
+  } else if (!$('pane-site').classList.contains('hidden') || !$('pane-sermons').classList.contains('hidden')) {
+    selectTab('announcements');
+  }
 }
 
 /* ---------- desk tabs ---------- */
 function selectTab(name) {
-  for (const t of ['announcements', 'events', 'directory']) {
+  for (const t of ['announcements', 'events', 'sermons', 'directory', 'site']) {
     $('tab-' + t).classList.toggle('active', t === name);
     $('pane-' + t).classList.toggle('hidden', t !== name);
   }
 }
 $('tab-announcements').addEventListener('click', () => selectTab('announcements'));
 $('tab-events').addEventListener('click', () => selectTab('events'));
+$('tab-sermons').addEventListener('click', () => selectTab('sermons'));
 $('tab-directory').addEventListener('click', () => selectTab('directory'));
+$('tab-site').addEventListener('click', () => selectTab('site'));
 
 /* ================= ANNOUNCEMENTS ================= */
 async function fetchAnnouncements() {
@@ -605,6 +799,377 @@ $('event-form').addEventListener('submit', async (ev) => {
   setMsg('ef-msg', wasEdit ? 'Event updated.' : 'Event added to the calendar.', 'ok');
   loadEvents();
 });
+
+/* ================= SERMONS =================
+   The same sermons table the app's Studio writes: leaders post
+   and manage, members read published sermons, drafts stay
+   leader-only — all of that is the database's rules (011 + 013),
+   this page just follows them. A sermon saved here is the same
+   sermon the app shows, and the other way around. ------------- */
+async function loadSermons() {
+  setMsg('sermons-msg', 'Loading sermons…');
+  const { data, error } = await client
+    .from('sermons')
+    .select('*')
+    .eq('group_id', S.groupId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) {
+    S.sermons = [];
+    renderSermonList();
+    setMsg('sermons-msg', 'Sermons could not load. Check your connection and try again.', 'err');
+    return;
+  }
+  S.sermons = data || [];
+  setMsg('sermons-msg', '');
+  renderSermonList();
+}
+function renderSermonList() {
+  const box = $('sermon-list');
+  box.replaceChildren();
+  if (S.sermons.length === 0) {
+    box.appendChild(h('p', 'muted', isLeaderHere()
+      ? 'No sermons yet — write your first above.'
+      : 'No sermons posted yet.'));
+    return;
+  }
+  const leader = isLeaderHere();
+  for (const l of S.sermons) {
+    const b = h('button', 'listitem' + (l.id === S.editingSermonId ? ' active' : ''));
+    b.type = 'button';
+    const t = h('span', 't', l.title);
+    t.appendChild(h('span', 'badge ' + (l.is_draft ? 'draft' : 'live'), l.is_draft ? 'Draft' : 'Published'));
+    b.appendChild(t);
+    b.appendChild(h('span', 's', (l.passage_ref || 'No passage') + ' · ' + fmtDay(l.created_at)));
+    if (leader) {
+      b.addEventListener('click', () => openSermon(l.id));
+      box.appendChild(b);
+    } else {
+      // Members read in place: the title opens the sermon under it.
+      box.appendChild(b);
+      const panel = h('div', 'staticitem hidden');
+      const body = h('div', 'bodytext', l.body || '');
+      panel.appendChild(body);
+      if (l.closing_prompt) {
+        const c = h('div', 'bodytext', l.closing_prompt);
+        c.style.marginTop = '10px';
+        c.style.fontStyle = 'italic';
+        panel.appendChild(c);
+      }
+      box.appendChild(panel);
+      b.addEventListener('click', () => panel.classList.toggle('hidden'));
+    }
+  }
+}
+function resetSermonEditor() {
+  S.editingSermonId = null;
+  $('sermon-editor-heading').textContent = 'Write a sermon or lesson';
+  for (const id of ['sf-title', 'sf-passage', 'sf-body', 'sf-closing', 'sf-video']) {
+    $(id).value = '';
+    $(id).disabled = false;
+  }
+  $('assist-box').classList.remove('hidden');
+  $('sf-publish').classList.remove('hidden');
+  $('sf-draft').classList.remove('hidden');
+  $('sf-publish').textContent = 'Post sermon';
+  $('sf-delete').classList.add('hidden');
+  setMsg('sf-msg', '');
+  setMsg('assist-msg', '');
+  renderSermonList();
+}
+function openSermon(id) {
+  const l = S.sermons.find((x) => x.id === id);
+  if (!l) return;
+  S.editingSermonId = id;
+  $('sermon-editor-heading').textContent = 'Edit sermon';
+  $('sf-title').value = l.title || '';
+  $('sf-passage').value = l.passage_ref || '';
+  $('sf-body').value = l.body || '';
+  $('sf-closing').value = l.closing_prompt || '';
+  $('sf-video').value = l.video_url || '';
+  $('sf-publish').textContent = l.is_draft ? 'Post sermon' : 'Save changes';
+  $('sf-delete').classList.remove('hidden');
+  setMsg('sf-msg', '');
+  setMsg('assist-msg', '');
+  renderSermonList();
+}
+$('sermon-new').addEventListener('click', () => {
+  resetSermonEditor();
+  $('sf-title').focus();
+});
+async function saveSermon(asDraft) {
+  const title = $('sf-title').value.trim();
+  const body = $('sf-body').value.trim();
+  if (!title) { setMsg('sf-msg', 'Give the sermon a title first.', 'err'); return; }
+  if (!body) { setMsg('sf-msg', 'Write the sermon first — the teaching itself is the post.', 'err'); return; }
+  const video = $('sf-video').value.trim();
+  const closing = $('sf-closing').value.trim();
+  const fields = {
+    title,
+    passage_ref: $('sf-passage').value.trim(),
+    body,
+    video_url: video ? video : null,
+    closing_prompt: closing ? closing : null,
+    is_draft: asDraft,
+  };
+  const pubBtn = $('sf-publish'), draftBtn = $('sf-draft');
+  pubBtn.disabled = true; draftBtn.disabled = true;
+  let res;
+  if (S.editingSermonId) {
+    res = await client.from('sermons').update(fields).eq('id', S.editingSermonId).select('*').single();
+  } else {
+    res = await client.from('sermons')
+      .insert({ group_id: S.groupId, author_id: S.user.id, ...fields })
+      .select('*').single();
+  }
+  pubBtn.disabled = false; draftBtn.disabled = false;
+  if (res.error || !res.data) {
+    setMsg('sf-msg', 'That sermon did not save. Check your connection and try again — your text is still here.', 'err');
+    return;
+  }
+  S.editingSermonId = res.data.id;
+  await loadSermons();
+  openSermon(res.data.id);
+  setMsg('sf-msg', asDraft
+    ? 'Draft saved — only leaders can see it, and it is not in the Bible tab.'
+    : 'Sermon posted — your church can read it in the Bible tab now.', 'ok');
+}
+$('sermon-form').addEventListener('submit', (ev) => { ev.preventDefault(); saveSermon(false); });
+$('sf-draft').addEventListener('click', () => saveSermon(true));
+$('sf-delete').addEventListener('click', async () => {
+  if (!S.editingSermonId) return;
+  const l = S.sermons.find((x) => x.id === S.editingSermonId);
+  if (!window.confirm('Delete "' + (l ? l.title : 'this sermon') + '"? Your church will no longer see it.')) return;
+  const { error } = await client.from('sermons').delete().eq('id', S.editingSermonId);
+  if (error) {
+    setMsg('sf-msg', 'That sermon could not be deleted. Check your connection and try again.', 'err');
+    return;
+  }
+  resetSermonEditor();
+  await loadSermons();
+  setMsg('sermons-msg', 'Sermon deleted.', 'ok');
+});
+
+/* ---------- lesson / sermon assist (same function the app calls) ---------- */
+async function callAssist(payload) {
+  const { data: sess } = await client.auth.getSession();
+  const token = sess && sess.session ? sess.session.access_token : '';
+  const resp = await fetch(SUPABASE_URL + '/functions/v1/assist', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+      'apikey': SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify(payload),
+  });
+  let json = null;
+  try { json = await resp.json(); } catch (e) { /* non-JSON answer */ }
+  return { status: resp.status, json };
+}
+async function probeAssist() {
+  if (S.assistOk !== null) { renderAssistState(); return; }
+  try {
+    const r = await callAssist({ kind: 'ping' });
+    S.assistOk = !!(r.json && r.json.ok === true);
+  } catch (e) {
+    S.assistOk = false;
+  }
+  renderAssistState();
+}
+function renderAssistState() {
+  const buttons = $('assist-buttons');
+  if (S.assistOk === false) {
+    buttons.classList.add('hidden');
+    setMsg('assist-msg', 'Lesson / sermon assist isn’t available right now. Your text is unchanged.');
+  } else {
+    buttons.classList.remove('hidden');
+  }
+}
+document.querySelectorAll('[data-assist]').forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    const mode = btn.getAttribute('data-assist');
+    const title = $('sf-title').value.trim();
+    const passage = $('sf-passage').value.trim();
+    const notes = $('sf-body').value;
+    if (mode === 'tighten') {
+      if (!notes.trim()) { setMsg('assist-msg', 'Write the sermon first — this works on text you’ve already written.', 'err'); return; }
+    } else if (!passage && !notes.trim() && !title) {
+      setMsg('assist-msg', 'Add a title, a passage, or a few notes first, then try again.', 'err'); return;
+    }
+    const series = [...S.sermons]
+      .filter((l) => l.id !== S.editingSermonId)
+      .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
+      .slice(-8)
+      .map((l) => ({ title: l.title, passageRef: l.passage_ref || '' }));
+    const all = document.querySelectorAll('[data-assist]');
+    all.forEach((b) => { b.disabled = true; });
+    setMsg('assist-msg', 'Working on it…');
+    try {
+      const r = await callAssist({ kind: 'sermon', mode, title, passage, notes, series });
+      if (r.status === 501 || (r.json && r.json.error === 'not-configured')) {
+        S.assistOk = false; renderAssistState();
+        setMsg('assist-msg', 'Lesson / sermon assist isn’t available right now. Your text is unchanged.');
+        return;
+      }
+      if (r.json && typeof r.json.text === 'string' && r.json.text.trim()) {
+        const text = r.json.text.trim();
+        if (mode === 'tighten' || !$('sf-body').value.trim()) {
+          $('sf-body').value = text;
+        } else {
+          $('sf-body').value = $('sf-body').value.replace(/\s+$/, '') + '\n\n' + text;
+        }
+        setMsg('assist-msg', 'Added — make it yours before you post it.', 'ok');
+      } else {
+        setMsg('assist-msg', 'That didn’t work just now. Your text is unchanged — try again in a moment.', 'err');
+      }
+    } catch (e) {
+      setMsg('assist-msg', 'That didn’t work just now. Your text is unchanged — try again in a moment.', 'err');
+    } finally {
+      all.forEach((b) => { b.disabled = false; });
+    }
+  });
+});
+
+/* ================= YOUR CHURCH SITE =================
+   The public page builds itself from the group (name, logo,
+   brand, events, announcements) — this tab only writes the
+   leader's own touches into groups.settings, through the same
+   read-merge-write of the whole settings object the app's
+   saveSettings uses, under the same "leaders update their group"
+   database rule. Site choices live at settings.site; the giving
+   link is settings.tithelyUrl itself — the one link the app's
+   Give button and the public page both read. ------------------ */
+function sitePhotoUrl(path) {
+  try {
+    const { data } = client.storage.from('church-site-photos').getPublicUrl(path);
+    return data && data.publicUrl ? data.publicUrl : null;
+  } catch (_e) { return null; }
+}
+async function loadSiteSettings() {
+  const m = currentMembership();
+  if (!m) return;
+  $('site-view-link').href = '/site/?c=' + encodeURIComponent(m.group.join_code || '');
+  const { data, error } = await client.from('groups').select('settings').eq('id', S.groupId).maybeSingle();
+  if (error || !data) {
+    setMsg('site-msg', 'Your site details could not load just now. Check your connection and try again.', 'err');
+    return;
+  }
+  S.settings = data.settings && typeof data.settings === 'object' ? data.settings : {};
+  const site = S.settings.site && typeof S.settings.site === 'object' ? S.settings.site : {};
+  $('site-welcome').value = typeof site.welcome === 'string' ? site.welcome : '';
+  $('site-times').value = typeof site.serviceTimes === 'string' ? site.serviceTimes : '';
+  $('site-address').value = typeof site.address === 'string' ? site.address : '';
+  $('site-giving').value = typeof S.settings.tithelyUrl === 'string' ? S.settings.tithelyUrl : '';
+  S.sitePhotos = Array.isArray(site.photos) ? site.photos.filter((p) => typeof p === 'string') : [];
+  setMsg('site-msg', '');
+  renderSitePhotos();
+  probeSiteBucket();
+}
+async function saveSiteSettings(successText) {
+  if (!S.settings) return false;
+  const site = S.settings.site && typeof S.settings.site === 'object' ? { ...S.settings.site } : {};
+  site.welcome = $('site-welcome').value.trim();
+  site.serviceTimes = $('site-times').value.trim();
+  site.address = $('site-address').value.trim();
+  site.photos = [...S.sitePhotos];
+  const next = { ...S.settings, site, tithelyUrl: $('site-giving').value.trim() };
+  const { error } = await client.from('groups').update({ settings: next }).eq('id', S.groupId);
+  if (error) {
+    setMsg('site-msg', 'Those details did not save. Check your connection and try again.', 'err');
+    return false;
+  }
+  S.settings = next;
+  setMsg('site-msg', successText || 'Saved — your church site shows it now.', 'ok');
+  return true;
+}
+$('site-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const giving = $('site-giving').value.trim();
+  if (giving && !/^https:\/\//i.test(giving)) {
+    setMsg('site-msg', 'The giving link needs to start with https:// — copy the full address of your giving page.', 'err');
+    return;
+  }
+  $('site-save').disabled = true;
+  await saveSiteSettings();
+  $('site-save').disabled = false;
+});
+function renderSitePhotos() {
+  const box = $('site-photos');
+  box.replaceChildren();
+  if (S.sitePhotos.length === 0) {
+    box.appendChild(h('p', 'muted', 'No photos yet — your site looks complete without them, and you can add some any time.'));
+    return;
+  }
+  S.sitePhotos.forEach((path, i) => {
+    const fig = h('figure');
+    const url = sitePhotoUrl(path);
+    if (url) {
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = '';
+      fig.appendChild(img);
+    }
+    const cap = h('figcaption');
+    if (i === 0) cap.appendChild(h('div', 'hint', 'Banner photo'));
+    const rm = h('button', 'btn danger small', 'Remove');
+    rm.type = 'button';
+    rm.addEventListener('click', () => removeSitePhoto(path));
+    cap.appendChild(rm);
+    fig.appendChild(cap);
+    box.appendChild(fig);
+  });
+}
+async function probeSiteBucket() {
+  if (S.siteBucketOk !== null) { renderSiteBucketState(); return; }
+  try {
+    const { error } = await client.storage.from('church-site-photos').list(S.groupId, { limit: 1 });
+    S.siteBucketOk = !error;
+  } catch (_e) {
+    S.siteBucketOk = false;
+  }
+  renderSiteBucketState();
+}
+function renderSiteBucketState() {
+  const ready = S.siteBucketOk === true;
+  $('site-photo-controls').classList.toggle('hidden', !ready);
+  $('site-photo-setup').classList.toggle('hidden', ready);
+}
+$('site-photo-upload').addEventListener('click', async () => {
+  const input = $('site-photo-file');
+  const file = input.files && input.files[0];
+  if (!file) { setMsg('site-photos-msg', 'Choose a photo first.', 'err'); return; }
+  const btn = $('site-photo-upload');
+  btn.disabled = true;
+  setMsg('site-photos-msg', 'Adding your photo…');
+  const safeName = (file.name || 'photo').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-60);
+  const path = S.groupId + '/' + Date.now() + '-' + safeName;
+  const { error } = await client.storage.from('church-site-photos').upload(path, file);
+  btn.disabled = false;
+  if (error) {
+    const m = (error.message || '').toLowerCase();
+    if (m.includes('bucket') || m.includes('not found') || m.includes('404')) {
+      S.siteBucketOk = false;
+      renderSiteBucketState();
+      setMsg('site-photos-msg', '', '');
+    } else {
+      setMsg('site-photos-msg', 'That photo did not upload. Check your connection and try again.', 'err');
+    }
+    return;
+  }
+  input.value = '';
+  S.sitePhotos.push(path);
+  renderSitePhotos();
+  await saveSiteSettings('Photo added — your church site shows it now.');
+  setMsg('site-photos-msg', '');
+});
+async function removeSitePhoto(path) {
+  if (!window.confirm('Remove this photo from your church site?')) return;
+  await client.storage.from('church-site-photos').remove([path]);
+  S.sitePhotos = S.sitePhotos.filter((p) => p !== path);
+  renderSitePhotos();
+  await saveSiteSettings('Photo removed.');
+}
 
 /* ================= DIRECTORY =================
    Read-only here by design: the view is the rule. It only ever
