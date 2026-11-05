@@ -21,6 +21,21 @@
    a flat typographic variant, never a stock or generated image;
    there are no gradients anywhere.
 
+   v3 (the approved richer treatment + real sub-pages): serif
+   display type, letterspaced small-cap section labels, the
+   church's logo large in the hero as a gold-ringed medallion and
+   faint behind the words as a watermark, the welcome as a
+   pull-quote, the visit block as a display-type card — craft
+   from the church's own identity only. The header's second row
+   links only to what exists for this church: Visit and
+   Announcements scroll to their sections; Sermons and Events go
+   to real sub-pages (/site/sermons.html, /site/events.html,
+   rendered by list-page.js from the same function — full lists,
+   no caps) that carry this church's address (?c= or ?s=) with
+   them. If the church has linked its youth group
+   (settings.site.linkedYouthCode, served as linkedYouthCode),
+   the footer quietly links to that group's page on Your Youth.
+
    Edit-in-place: a signed-in LEADER of this church (the desk
    session carries over — same origin) gets a discreet edit bar
    and can change the welcome, service times, address, giving link
@@ -175,6 +190,23 @@ function render(data) {
   hg.classList.toggle('hidden', !data.givingUrl);
   if (data.givingUrl) hg.href = data.givingUrl;
 
+  // the hero carries the same mark large: a gold-ringed
+  // medallion, and the logo again faint behind the words. No
+  // logo — no medallion; the typographic panel stands alone.
+  const medal = $('hero-medallion'), medalImg = $('hero-medallion-img'), wm = $('hero-watermark');
+  for (const el of [medal, medalImg, wm]) el.classList.toggle('hidden', !data.logoUrl);
+  if (data.logoUrl) {
+    medalImg.src = data.logoUrl;
+    wm.src = data.logoUrl;
+    medalImg.addEventListener('error', () => { medal.classList.add('hidden'); medalImg.classList.add('hidden'); });
+    wm.addEventListener('error', () => wm.classList.add('hidden'));
+  }
+
+  // where this church's sub-pages live: the same address this
+  // page was found by (join code or chosen slug) travels along.
+  const look = resolveLookup();
+  const pageUrl = (page) => '/site/' + page + (look ? '?' + look.query : '');
+
   // hero — name, town, main service time; one photo if there is
   // one, used once. No photo: the flat typographic variant.
   $('site-name').textContent = data.name;
@@ -212,6 +244,7 @@ function render(data) {
   // announcements — newest first, at most three.
   const news = (Array.isArray(data.announcements) ? data.announcements : []).slice(0, 3);
   $('sec-news').classList.toggle('hidden', news.length === 0);
+  $('nav-news').classList.toggle('hidden', news.length === 0);
   if (news.length > 0) {
     const box = $('site-news');
     box.replaceChildren();
@@ -230,6 +263,11 @@ function render(data) {
     .filter((e) => { const d = new Date(e.startsAt); return !isNaN(d.getTime()) && d >= startToday; })
     .slice(0, 5);
   $('sec-events').classList.toggle('hidden', events.length === 0);
+  $('nav-events').classList.toggle('hidden', events.length === 0);
+  if (events.length > 0) {
+    $('nav-events').href = pageUrl('events.html');
+    $('events-all').href = pageUrl('events.html');
+  }
   if (events.length > 0) {
     const box = $('site-events');
     box.replaceChildren();
@@ -244,6 +282,11 @@ function render(data) {
 
   // sermons — the latest featured, up to four more as rows.
   $('sec-sermons').classList.toggle('hidden', sermons.length === 0);
+  $('nav-sermons').classList.toggle('hidden', sermons.length === 0);
+  if (sermons.length > 0) {
+    $('nav-sermons').href = pageUrl('sermons.html');
+    $('sermons-all').href = pageUrl('sermons.html');
+  }
   if (sermons.length > 0) {
     const feat = sermons[0];
     const fbox = $('sermon-featured');
@@ -296,6 +339,13 @@ function render(data) {
   // footer
   $('foot-name').textContent = data.name;
   $('foot-name-2').textContent = data.name;
+  // a linked youth group gets one quiet line — the church chose
+  // the code in its desk; the youth page itself is Your Youth's.
+  const youthCode = typeof data.linkedYouthCode === 'string' ? data.linkedYouthCode.trim() : '';
+  $('youth-link-wrap').classList.toggle('hidden', !youthCode);
+  if (youthCode) {
+    $('youth-link').href = 'https://youryouth.org/site/?c=' + encodeURIComponent(youthCode);
+  }
   const fl = [];
   if (data.address) fl.push(firstLine(data.address));
   if (town) fl.push(town);

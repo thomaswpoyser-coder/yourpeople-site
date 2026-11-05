@@ -6,6 +6,9 @@
 <title>Your People — church site</title>
 <meta name="description" content="A church's public page on Your People — service times, what's coming up, and a way in.">
 <link rel="icon" id="favicon" href="/assets/your-people-icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
 <style>
   :root{
@@ -14,10 +17,10 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
-  html{scroll-behavior:smooth}
+  html{scroll-behavior:smooth;scroll-padding-top:118px}
   body{background:var(--cream);color:var(--ink);
     font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:16.5px;line-height:1.55}
-  h1,h2{font-family:Georgia,"Times New Roman",serif;font-weight:normal}
+  h1,h2{font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;font-weight:normal}
   .hidden{display:none !important}
   a{color:var(--green)}
   .wrap{max-width:780px;margin:0 auto;padding:0 20px}
@@ -28,10 +31,18 @@
   header.top .hwrap{max-width:780px;margin:0 auto;padding:10px 20px;
     display:flex;align-items:center;gap:10px}
   header.top img{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#fff}
-  header.top .hname{font-family:Georgia,serif;font-size:18px;margin-right:auto;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  header.top a.hbtn{font-size:15px;text-decoration:none;padding:8px 10px;min-height:44px;
+  header.top .hname{font-family:"Cormorant Garamond",Georgia,serif;font-size:20px;font-weight:600;
+    margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* section links — a slim second row of the header; a link is
+     present only when its section will render for this church.
+     No menu, no dropdown: the row scrolls sideways if it must. */
+  header.top .hnav{max-width:780px;margin:0 auto;padding:0 20px;display:flex;gap:22px;
+    overflow-x:auto;border-top:1px solid var(--line);scrollbar-width:none}
+  header.top .hnav::-webkit-scrollbar{display:none}
+  header.top .hnav a{font-size:12.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    text-decoration:none;color:var(--muted);padding:9px 0;white-space:nowrap;min-height:40px;
     display:inline-flex;align-items:center}
+  header.top .hnav a:hover{color:var(--green)}
   .btn{display:inline-block;background:var(--green);color:#fff;border:1px solid var(--green);
     border-radius:10px;padding:12px 22px;font:inherit;font-weight:600;cursor:pointer;
     text-decoration:none;min-height:48px}
@@ -40,42 +51,90 @@
   .btn.plain{background:transparent;color:var(--green)}
   .btn.plain:hover{background:transparent;color:var(--green-deep)}
 
-  /* hero — two first-class variants: a real photo, or type on a
-     flat brand colour. No gradients, ever. */
-  #hero{background:var(--green-deep);color:#fff}
+  /* hero — the church's identity, framed: a panel in the surface
+     tone set into the deep tone, the church's own logo large in
+     a gold-ringed medallion and faint behind the words as a
+     watermark. A real photo, when there is one, still leads.
+     Layered FLAT tones only — no gradients, ever. A church with
+     no logo gets the same panel and type with no medallion:
+     nothing is faked to fill the space. */
+  #hero{background:var(--green-deep)}
   #hero .hero-photo{display:block;width:100%;max-height:420px;object-fit:cover}
-  #hero .hero-inner{padding:38px 20px 42px}
-  #hero h1{font-size:40px;line-height:1.12;margin:0 0 8px}
-  #hero .town{font-size:18px;margin:0 0 2px;opacity:.92}
-  #hero .herotime{font-size:18px;margin:0;opacity:.92;white-space:pre-wrap}
-  #hero .hero-actions{margin-top:22px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
-  #hero .btn{background:#fff;color:var(--green-deep);border-color:#fff}
-  #hero a.textlink{color:#fff;font-size:16px}
+  #hero .hero-inner{padding:30px 20px 38px}
+  .hero-panel{position:relative;overflow:hidden;background:var(--card);color:var(--ink);
+    border:1px solid var(--gold);outline:1px solid var(--line);outline-offset:5px;
+    padding:42px 26px 44px;text-align:center}
+  .hero-panel>*{position:relative;z-index:1}
+  .hero-panel>.hero-watermark{position:absolute;z-index:0;right:-58px;bottom:-64px;
+    width:250px;height:250px;border-radius:50%;object-fit:cover;opacity:.07;pointer-events:none}
+  .hero-medallion{width:104px;height:104px;border-radius:50%;border:1px solid var(--gold);
+    outline:1px solid var(--line);outline-offset:5px;margin:0 auto 24px;padding:4px;
+    background:var(--cream)}
+  .hero-medallion img{width:100%;height:100%;border-radius:50%;object-fit:cover;
+    display:block;background:#fff}
+  #hero h1{font-size:42px;font-weight:600;line-height:1.1;margin:0 0 10px}
+  .hero-rule{width:54px;border-top:1px solid var(--gold);margin:14px auto 20px}
+  #hero .town{font-size:13px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 4px}
+  #hero .herotime{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;
+    font-size:20px;margin:0;white-space:pre-wrap}
+  #hero .hero-actions{margin-top:24px;display:flex;flex-wrap:wrap;gap:14px;
+    align-items:center;justify-content:center}
+  #hero .btn{background:var(--gold);color:#241105;border-color:var(--gold)}
+  #hero .btn:hover{background:var(--gold);color:#241105}
+  #hero a.textlink{color:var(--green);font-size:16px}
+  html[data-theme="dark"] #hero a.textlink{color:var(--gold)}
 
   main.wrap{padding-top:8px;padding-bottom:56px}
   section.block{padding:26px 0 6px;border-top:1px solid var(--line)}
   section.block:first-child{border-top:none}
-  section.block h2{font-size:24px;color:var(--green-deep);margin:0 0 12px}
-  html[data-theme="dark"] section.block h2{color:var(--ink)}
+  /* section headings are labels: letterspaced small caps with a
+     hairline running to the edge. Gold only where it can be read
+     (dark palettes); the deep brand tone carries light ones. */
+  section.block>h2{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    font-size:13px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--green-deep);margin:0 0 18px;display:flex;align-items:center;gap:14px}
+  section.block>h2::after{content:"";flex:1;border-top:1px solid var(--line)}
+  html[data-theme="dark"] section.block>h2{color:var(--gold)}
   .times{white-space:pre-wrap;font-size:17px}
+  /* the visit block is a card, its address set in display type */
+  #visit-view{background:var(--card);border:1px solid var(--line);
+    border-top:2px solid var(--green);padding:24px 22px}
   .addr{white-space:pre-wrap;margin:10px 0 0}
-  .welcome{font-size:18.5px;white-space:pre-wrap;max-width:640px}
+  #visit .addr{font-family:"Cormorant Garamond",Georgia,serif;font-size:29px;
+    font-weight:600;line-height:1.2}
+  #directions{background:transparent;color:var(--green);border-color:var(--green)}
+  #directions:hover{background:transparent;color:var(--green-deep);border-color:var(--green-deep)}
+  html[data-theme="dark"] #directions{color:var(--gold);border-color:var(--gold)}
+  /* the welcome, given the weight of a pull-quote — the words
+     remain exactly the church's own */
+  .welcome{position:relative;font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;
+    font-weight:500;font-size:clamp(23px,5.5vw,28px);line-height:1.35;white-space:pre-wrap;
+    max-width:640px;padding:4px 0 0 42px}
+  .welcome::before{content:"\201C";position:absolute;left:-2px;top:-24px;font-size:84px;
+    line-height:1;font-style:normal;color:var(--green)}
+  .viewall{margin:14px 0 0;font-size:15px}
   .row{padding:11px 0;border-top:1px solid var(--line)}
   .row:first-of-type{border-top:none;padding-top:2px}
   .row .t{font-weight:700;font-size:17px}
   .row .s{color:var(--muted);font-size:14.5px;margin-top:1px}
   .row .b,.row .n{white-space:pre-wrap;margin-top:4px}
   .sermon-featured .t{font-size:19px}
-  .appcard{border:1px solid var(--line);border-radius:14px;background:var(--card);
-    padding:22px;text-align:center}
-  .appcard h2{margin-top:0}
-  .appcard .code{font-size:26px;font-weight:700;letter-spacing:2px;color:var(--green);
-    font-family:Georgia,serif;display:block;margin:6px 0 2px}
-  .closing{padding:26px 0 2px;border-top:1px solid var(--line)}
-  .closing p{font-size:18px;margin:0 0 14px}
+  .appcard{border:1px solid var(--gold);outline:1px solid var(--line);outline-offset:4px;
+    border-radius:4px;background:var(--card);padding:26px 22px;text-align:center}
+  .appcard h2{margin-top:0;font-size:26px;font-weight:600}
+  /* the join code must never clip: modest size and spacing, and
+     it may wrap rather than overflow (the harness checks this) */
+  .appcard .code{font-size:clamp(20px,6vw,27px);font-weight:700;letter-spacing:.08em;
+    color:var(--green);font-family:"Cormorant Garamond",Georgia,serif;display:block;
+    margin:6px 0 2px;max-width:100%;overflow-wrap:anywhere}
+  .closing{padding:26px 0 2px;border-top:1px solid var(--line);text-align:center}
+  .closing .crule{width:54px;border-top:1px solid var(--gold);margin:0 auto 20px}
+  .closing p{font-family:"Cormorant Garamond",Georgia,serif;font-size:21px;margin:0 0 14px}
   footer.foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
-    font-size:14px;color:var(--muted)}
-  footer.foot .fbrand{color:var(--ink)}
+    font-size:14px;color:var(--muted);text-align:center}
+  footer.foot .fbrand{color:var(--ink);font-family:"Cormorant Garamond",Georgia,serif;
+    font-size:17px;font-weight:600}
 
   .center-card{max-width:520px;margin:10vh auto 0;background:var(--card);
     border:1px solid var(--line);border-radius:14px;padding:28px;text-align:center}
@@ -141,9 +200,14 @@
       <div class="hwrap">
         <img id="head-logo" class="hidden" alt="">
         <span class="hname" id="head-name"></span>
-        <a class="hbtn" href="#visit" id="nav-visit">Visit</a>
         <a class="btn small hidden" id="head-give" href="#" target="_blank" rel="noopener">Give</a>
       </div>
+      <nav class="hnav" aria-label="On this page">
+        <a href="#visit" id="nav-visit">Visit</a>
+        <a href="#sec-news" id="nav-news" class="hidden">Announcements</a>
+        <a href="#" id="nav-events" class="hidden">Events</a>
+        <a href="#" id="nav-sermons" class="hidden">Sermons</a>
+      </nav>
     </header>
 
     <section id="hero">
@@ -154,12 +218,17 @@
         <input type="file" id="photo-replace-file" accept="image/*" class="hidden">
       </div>
       <div class="wrap hero-inner">
-        <h1 id="site-name">Church</h1>
-        <p class="town hidden" id="hero-town"></p>
-        <p class="herotime hidden" id="hero-time"></p>
-        <div class="hero-actions">
-          <a class="btn" href="#visit">Plan your visit</a>
-          <a class="textlink hidden" id="hero-sermon" href="#sermons">Listen to a recent sermon</a>
+        <div class="hero-panel">
+          <img id="hero-watermark" class="hero-watermark hidden" alt="" aria-hidden="true">
+          <div class="hero-medallion hidden" id="hero-medallion"><img id="hero-medallion-img" class="hidden" alt=""></div>
+          <h1 id="site-name">Church</h1>
+          <div class="hero-rule" aria-hidden="true"></div>
+          <p class="town hidden" id="hero-town"></p>
+          <p class="herotime hidden" id="hero-time"></p>
+          <div class="hero-actions">
+            <a class="btn" href="#visit">Plan your visit</a>
+            <a class="textlink hidden" id="hero-sermon" href="#sec-sermons">Listen to a recent sermon</a>
+          </div>
         </div>
       </div>
     </section>
@@ -197,12 +266,14 @@
       <section class="block hidden" id="sec-events">
         <h2>Upcoming events</h2>
         <div id="site-events"></div>
+        <p class="viewall"><a id="events-all" href="#">All events</a></p>
       </section>
 
       <section class="block hidden" id="sec-sermons">
         <h2>Recent sermons</h2>
         <div id="sermon-featured"></div>
         <div id="site-sermons"></div>
+        <p class="viewall"><a id="sermons-all" href="#">All sermons</a></p>
       </section>
 
       <section class="block hidden" id="sec-give">
@@ -234,6 +305,7 @@
       </section>
 
       <section class="closing hidden" id="sec-closing">
+        <div class="crule" aria-hidden="true"></div>
         <p id="closing-text"></p>
         <a class="btn hidden" id="closing-directions" href="#" target="_blank" rel="noopener">Get directions</a>
       </section>
@@ -241,6 +313,7 @@
       <footer class="foot">
         <div class="fbrand" id="foot-name"></div>
         <div id="foot-line"></div>
+        <p class="hidden" id="youth-link-wrap" style="margin:10px 0 0"><a id="youth-link" href="#" target="_blank" rel="noopener">Youth group</a></p>
         <div style="margin-top:10px">This page is <span id="foot-name-2"></span>&rsquo;s own, made with <a href="/">Your People</a>.</div>
       </footer>
     </main>
@@ -260,6 +333,6 @@
      ?v= on the script tag is bumped whenever the renderer
      changes, so a just-updated page is never masked by a
      browser's cached copy of the previous renderer. -->
-<script src="/site/church-site.js?v=3"></script>
+<script src="/site/church-site.js?v=4"></script>
 </body>
 </html>

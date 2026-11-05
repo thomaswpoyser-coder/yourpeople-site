@@ -291,6 +291,9 @@
           <label for="site-giving">Giving link</label>
           <input type="text" id="site-giving" maxlength="500" placeholder="https://&hellip;">
           <p class="hint">Your church&rsquo;s own giving page. The same link powers the Give button in the app.</p>
+          <label for="site-youth-code">Youth group join code</label>
+          <input type="text" id="site-youth-code" maxlength="40" placeholder="e.g. SOULFIREYOUT" autocapitalize="characters" autocomplete="off" spellcheck="false">
+          <p class="hint">Links your public page to your youth group&rsquo;s page &mdash; if your youth group is on Your Youth, type its join code and your church site footer gains a quiet link to it. Leave it empty if you don&rsquo;t have one.</p>
           <div class="btnrow">
             <button class="btn" type="submit" id="site-save">Save site details</button>
           </div>
@@ -1149,6 +1152,7 @@ async function loadSiteSettings() {
   $('site-times').value = typeof site.serviceTimes === 'string' ? site.serviceTimes : '';
   $('site-address').value = typeof site.address === 'string' ? site.address : '';
   $('site-giving').value = typeof S.settings.tithelyUrl === 'string' ? S.settings.tithelyUrl : '';
+  $('site-youth-code').value = typeof site.linkedYouthCode === 'string' ? site.linkedYouthCode : '';
   S.sitePhotos = Array.isArray(site.photos) ? site.photos.filter((p) => typeof p === 'string') : [];
   setMsg('site-msg', '');
   renderSitePhotos();
@@ -1160,6 +1164,7 @@ async function saveSiteSettings(successText) {
   site.welcome = $('site-welcome').value.trim();
   site.serviceTimes = $('site-times').value.trim();
   site.address = $('site-address').value.trim();
+  site.linkedYouthCode = $('site-youth-code').value.trim().toUpperCase();
   site.photos = [...S.sitePhotos];
   const next = { ...S.settings, site, tithelyUrl: $('site-giving').value.trim() };
   const { error } = await client.from('groups').update({ settings: next }).eq('id', S.groupId);
