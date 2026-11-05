@@ -271,6 +271,15 @@
         <h2 class="sectiontitle" style="margin-top:0">Your church site</h2>
         <p class="hint" style="margin:0 0 10px">Your church already has a public page &mdash; it builds itself from your logo, your colours, your calendar and your announcements, with nothing for you to set up. Fill in anything below to make it more your own; every part is optional, and you can change it any time.</p>
         <p style="margin:0 0 6px"><a id="site-view-link" href="#" target="_blank" rel="noopener">View your church site</a></p>
+        <p class="hint hidden" id="site-fallback" style="margin:0 0 6px"></p>
+        <label for="site-slug">Site address</label>
+        <div class="btnrow" style="margin-top:0">
+          <span class="muted">yourpeople.church/</span>
+          <input type="text" id="site-slug" maxlength="40" placeholder="yourchurch" autocapitalize="none" autocomplete="off" spellcheck="false" style="flex:1;min-width:170px;width:auto">
+          <button class="btn secondary" type="button" id="site-slug-save">Save address</button>
+        </div>
+        <p class="hint">The short address for your church site &mdash; the one to print in the bulletin and say out loud. Lowercase letters, numbers and hyphens, 3&ndash;40 characters. Clearing the field and saving takes the address back off.</p>
+        <p class="msg" id="site-slug-msg"></p>
         <form id="site-form">
           <label for="site-welcome">Welcome text</label>
           <textarea id="site-welcome" rows="3" maxlength="2000" placeholder="A few words for someone finding your church for the first time&hellip;"></textarea>
@@ -389,6 +398,7 @@ const S = {
   editingAnnId: null, editingEventId: null, editingSermonId: null,
   assistOk: null,            // sermon-assist probe result (null = not probed yet)
   settings: null,            // current group's settings jsonb (site tab)
+  siteSlug: '',              // settings.site.slug — the chosen site address
   sitePhotos: [],            // settings.site.photos — storage paths
   siteBucketOk: null,        // church-site-photos bucket probe (null = not probed)
 };
@@ -509,7 +519,7 @@ client.auth.onAuthStateChange((_event, session) => {
     }
   } else {
     S.user = null; S.profile = null; S.memberships = []; S.groupId = null;
-    S.settings = null; S.sitePhotos = []; S.siteBucketOk = null;
+    S.settings = null; S.siteSlug = ''; S.sitePhotos = []; S.siteBucketOk = null;
     clearBrand();
     showView('view-signin');
   }
@@ -577,6 +587,7 @@ $('group-select').addEventListener('change', () => {
   cancelEventEdit();
   S.editingSermonId = null;
   S.settings = null;
+  S.siteSlug = '';
   S.sitePhotos = [];
   S.siteBucketOk = null;
   applyGroup();
@@ -1040,6 +1051,62 @@ document.querySelectorAll('[data-assist]').forEach((btn) => {
    database rule. Site choices live at settings.site; the giving
    link is settings.tithelyUrl itself — the one link the app's
    Give button and the public page both read. ------------------ */
+/* ---------- site addresses ----------
+   The church's chosen short address (yourpeople.church/<slug>)
+   lives at settings.site.slug. The shape rules here mirror the
+   church-site function's own copy — keep the two in step. The
+   function has the final word on availability (its ?check mode);
+   this side validates the shape first, so the leader hears about
+   a problem before anything is saved, and a taken or refused
+   address is always a clear message, never a silent no-op. --- */
+const SLUG_RESERVED = [
+  'desk', 'site', 'app', 'api', 'www', 'mail', 'help', 'support',
+  'admin', 'yourpeople', 'youryouth', 'login', 'join', 'c',
+  'about', 'account', 'assets', 'blog', 'church', 'churches',
+  'contact', 'cname', 'dashboard', 'find', 'groups', 'home',
+  'index', 'new', 'news', 'pricing', 'privacy', 'robots',
+  'search', 'settings', 'signin', 'signup', 'sitemap', 'static',
+  'terms', 'your-people', 'your-youth', '404',
+];
+function slugProblemText(slug) {
+  if (slug.length < 3) return 'That’s a bit short — addresses run 3 to 40 characters.';
+  if (slug.length > 40) return 'That’s too long — addresses run 3 to 40 characters.';
+  if (/[^a-z0-9-]/.test(slug)) return 'Letters, numbers and hyphens only — no spaces or symbols.';
+  if (slug.startsWith('-') || slug.endsWith('-')) return 'The address can’t start or end with a hyphen.';
+  if (SLUG_RESERVED.includes(slug)) return 'That word belongs to Your People itself — try adding your town, or the word church.';
+  return null;
+}
+function suggestSlug(name) {
+  // The domain already says "church", so the suggestion drops the
+  // generic words and keeps the name's own: Centreville Baptist
+  // Church suggests centrevillebaptist.
+  const words = (name || '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  const drop = new Set(['church', 'the', 'of']);
+  const kept = words.filter((w) => !drop.has(w));
+  const joined = (kept.length ? kept : words).join('');
+  return joined.length >= 3 ? joined.slice(0, 40) : '';
+}
+/* The View link wears the pretty address once one is saved, and
+   the ?c= link stays visible underneath as the permanent
+   fallback — it works whether or not an address is chosen. */
+function updateSiteLinks() {
+  const m = currentMembership();
+  if (!m) return;
+  const codeUrl = '/site/?c=' + encodeURIComponent(m.group.join_code || '');
+  const link = $('site-view-link');
+  const fb = $('site-fallback');
+  if (S.siteSlug) {
+    link.href = '/' + S.siteSlug;
+    link.textContent = 'View your church site — yourpeople.church/' + S.siteSlug;
+    fb.textContent = 'The long address always works too: yourpeople.church' + codeUrl;
+    fb.classList.remove('hidden');
+  } else {
+    link.href = codeUrl;
+    link.textContent = 'View your church site';
+    fb.textContent = '';
+    fb.classList.add('hidden');
+  }
+}
 function sitePhotoUrl(path) {
   try {
     const { data } = client.storage.from('church-site-photos').getPublicUrl(path);
@@ -1057,6 +1124,10 @@ async function loadSiteSettings() {
   }
   S.settings = data.settings && typeof data.settings === 'object' ? data.settings : {};
   const site = S.settings.site && typeof S.settings.site === 'object' ? S.settings.site : {};
+  S.siteSlug = typeof site.slug === 'string' ? site.slug : '';
+  $('site-slug').value = S.siteSlug || suggestSlug(m.group.name);
+  setMsg('site-slug-msg', '');
+  updateSiteLinks();
   $('site-welcome').value = typeof site.welcome === 'string' ? site.welcome : '';
   $('site-times').value = typeof site.serviceTimes === 'string' ? site.serviceTimes : '';
   $('site-address').value = typeof site.address === 'string' ? site.address : '';
@@ -1093,6 +1164,87 @@ $('site-form').addEventListener('submit', async (ev) => {
   $('site-save').disabled = true;
   await saveSiteSettings();
   $('site-save').disabled = false;
+});
+/* Save the site address: shape first (local), then availability
+   through the church-site function (it answers for every group,
+   and always says yes to the address's own church), then the
+   same read-merge-write of settings.site the rest of the tab
+   uses. Clearing the field takes a saved address back off. */
+$('site-slug-save').addEventListener('click', async () => {
+  if (!S.settings) {
+    setMsg('site-slug-msg', 'Your site details are still loading — try again in a moment.', 'err');
+    return;
+  }
+  const slug = $('site-slug').value.trim().toLowerCase();
+  $('site-slug').value = slug;
+  const writeSite = async (nextSite) => {
+    const next = { ...S.settings, site: nextSite };
+    const { error } = await client.from('groups').update({ settings: next }).eq('id', S.groupId);
+    if (error) return false;
+    S.settings = next;
+    return true;
+  };
+  if (!slug) {
+    if (!S.siteSlug) {
+      setMsg('site-slug-msg', 'Type an address first — a word or two from your church’s name works well.', 'err');
+      return;
+    }
+    const site = { ...(S.settings.site && typeof S.settings.site === 'object' ? S.settings.site : {}) };
+    delete site.slug;
+    if (!(await writeSite(site))) {
+      setMsg('site-slug-msg', 'That did not save. Check your connection and try again.', 'err');
+      return;
+    }
+    S.siteSlug = '';
+    updateSiteLinks();
+    setMsg('site-slug-msg', 'Site address removed — your long address still works.', 'ok');
+    return;
+  }
+  if (slug === S.siteSlug) {
+    setMsg('site-slug-msg', 'That’s already your address.', 'ok');
+    return;
+  }
+  const problem = slugProblemText(slug);
+  if (problem) { setMsg('site-slug-msg', problem, 'err'); return; }
+  const btn = $('site-slug-save');
+  btn.disabled = true;
+  setMsg('site-slug-msg', 'Checking that address…');
+  let verdict = null;
+  try {
+    const resp = await fetch(
+      SUPABASE_URL + '/functions/v1/church-site?check=' + encodeURIComponent(slug) +
+        '&for=' + encodeURIComponent(S.groupId),
+      { headers: { apikey: SUPABASE_ANON_KEY } },
+    );
+    if (resp.ok) verdict = await resp.json();
+  } catch (_e) { /* verdict stays null — handled below */ }
+  if (!verdict || typeof verdict.available !== 'boolean') {
+    btn.disabled = false;
+    setMsg('site-slug-msg', 'The address checker isn’t answering just now, so nothing was saved. Try again in a moment.', 'err');
+    return;
+  }
+  if (!verdict.available) {
+    btn.disabled = false;
+    setMsg('site-slug-msg',
+      verdict.reason === 'reserved'
+        ? 'That word belongs to Your People itself — try adding your town, or the word church.'
+        : verdict.reason === 'invalid'
+          ? 'That address doesn’t fit the rules — lowercase letters, numbers and hyphens, 3 to 40 characters.'
+          : 'Another church already uses that address. Try a small change — add your town, or the word church.',
+      'err');
+    return;
+  }
+  const site = S.settings.site && typeof S.settings.site === 'object' ? { ...S.settings.site } : {};
+  site.slug = slug;
+  const saved = await writeSite(site);
+  btn.disabled = false;
+  if (!saved) {
+    setMsg('site-slug-msg', 'That did not save. Check your connection and try again.', 'err');
+    return;
+  }
+  S.siteSlug = slug;
+  updateSiteLinks();
+  setMsg('site-slug-msg', 'Saved — your church site now answers to yourpeople.church/' + slug + '.', 'ok');
 });
 function renderSitePhotos() {
   const box = $('site-photos');
