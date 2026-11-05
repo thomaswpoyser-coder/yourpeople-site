@@ -97,6 +97,10 @@
   .assistbox{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:18px 0 4px}
   .assistbox .ah{font-weight:700;color:var(--green);margin:0 0 8px}
   .assistbox .btn{padding:7px 13px;font-size:14px}
+  /* your church site — ministries editor */
+  .minrow{border:1px solid var(--line);border-radius:12px;padding:6px 16px 14px;
+    margin:0 0 12px;background:var(--cream)}
+  .minrow .row-actions{margin-top:12px}
   /* your church site — photos */
   .photogrid{display:flex;flex-wrap:wrap;gap:12px;margin:6px 0 4px}
   .photogrid figure{margin:0;width:150px}
@@ -270,7 +274,7 @@
     <section id="pane-site" class="hidden">
       <div class="card">
         <h2 class="sectiontitle" style="margin-top:0">Your church site</h2>
-        <p class="hint" style="margin:0 0 10px">Your church already has a public page &mdash; it builds itself from your logo, your colours, your calendar and your announcements, with nothing for you to set up. Fill in anything below to make it more your own; every part is optional, and you can change it any time.</p>
+        <p class="hint" style="margin:0 0 10px">Your church already has a public page &mdash; it builds itself from your logo, your colours, your calendar, your announcements and your ministries, with nothing for you to set up. Fill in anything below to make it more your own; every part is optional, and you can change it any time.</p>
         <p style="margin:0 0 6px"><a id="site-view-link" href="#" target="_blank" rel="noopener">View your church site</a></p>
         <p class="hint hidden" id="site-fallback" style="margin:0 0 6px"></p>
         <label for="site-slug">Site address</label>
@@ -294,6 +298,12 @@
           <label for="site-youth-code">Youth group join code</label>
           <input type="text" id="site-youth-code" maxlength="40" placeholder="e.g. SOULFIREYOUT" autocapitalize="characters" autocomplete="off" spellcheck="false">
           <p class="hint">Links your public page to your youth group&rsquo;s page &mdash; if your youth group is on Your Youth, type its join code and your church site footer gains a quiet link to it. Leave it empty if you don&rsquo;t have one.</p>
+          <label style="margin-top:22px">Ministries</label>
+          <p class="hint" style="margin-top:0">The groups and gatherings your church runs &mdash; a name, when it meets, and a sentence in your own words. They appear on your church site under Ministries, in the order below.</p>
+          <div id="site-ministries"></div>
+          <div class="btnrow" style="margin-top:10px">
+            <button class="btn secondary" type="button" id="site-ministry-add">Add a ministry</button>
+          </div>
           <div class="btnrow">
             <button class="btn" type="submit" id="site-save">Save site details</button>
           </div>
@@ -404,6 +414,7 @@ const S = {
   settings: null,            // current group's settings jsonb (site tab)
   siteSlug: '',              // settings.site.slug — the chosen site address
   sitePhotos: [],            // settings.site.photos — storage paths
+  siteMinistries: [],        // settings.site.ministries — the church's listed ministries
   siteBucketOk: null,        // church-site-photos bucket probe (null = not probed)
 };
 function currentMembership() {
@@ -539,7 +550,7 @@ client.auth.onAuthStateChange((_event, session) => {
     }
   } else {
     S.user = null; S.profile = null; S.memberships = []; S.groupId = null;
-    S.settings = null; S.siteSlug = ''; S.sitePhotos = []; S.siteBucketOk = null;
+    S.settings = null; S.siteSlug = ''; S.sitePhotos = []; S.siteMinistries = []; S.siteBucketOk = null;
     clearBrand();
     showView('view-signin');
   }
@@ -609,6 +620,7 @@ $('group-select').addEventListener('change', () => {
   S.settings = null;
   S.siteSlug = '';
   S.sitePhotos = [];
+  S.siteMinistries = [];
   S.siteBucketOk = null;
   applyGroup();
 });
@@ -1153,8 +1165,17 @@ async function loadSiteSettings() {
   $('site-address').value = typeof site.address === 'string' ? site.address : '';
   $('site-giving').value = typeof S.settings.tithelyUrl === 'string' ? S.settings.tithelyUrl : '';
   $('site-youth-code').value = typeof site.linkedYouthCode === 'string' ? site.linkedYouthCode : '';
+  S.siteMinistries = (Array.isArray(site.ministries) ? site.ministries : [])
+    .filter((m) => m && typeof m === 'object')
+    .map((m) => ({
+      name: typeof m.name === 'string' ? m.name : '',
+      when: typeof m.when === 'string' ? m.when : '',
+      place: typeof m.place === 'string' ? m.place : '',
+      blurb: typeof m.blurb === 'string' ? m.blurb : '',
+    }));
   S.sitePhotos = Array.isArray(site.photos) ? site.photos.filter((p) => typeof p === 'string') : [];
   setMsg('site-msg', '');
+  renderSiteMinistries();
   renderSitePhotos();
   probeSiteBucket();
 }
@@ -1165,6 +1186,7 @@ async function saveSiteSettings(successText) {
   site.serviceTimes = $('site-times').value.trim();
   site.address = $('site-address').value.trim();
   site.linkedYouthCode = $('site-youth-code').value.trim().toUpperCase();
+  site.ministries = siteMinistriesClean(S.siteMinistries);
   site.photos = [...S.sitePhotos];
   const next = { ...S.settings, site, tithelyUrl: $('site-giving').value.trim() };
   const { error } = await client.from('groups').update({ settings: next }).eq('id', S.groupId);
@@ -1176,6 +1198,88 @@ async function saveSiteSettings(successText) {
   setMsg('site-msg', successText || 'Saved — your church site shows it now.', 'ok');
   return true;
 }
+/* ---------- site ministries ----------
+   The church's listed ministries live at settings.site.ministries
+   as {name, when, place, blurb} in the leaders' chosen order.
+   The editor below keeps its working copy in S.siteMinistries
+   (the inputs write straight into it) and the tab's save cleans
+   it the same way the public page's door does: trimmed, capped,
+   nameless entries dropped, twelve at most. ------------------- */
+function siteMinistriesClean(list) {
+  return (Array.isArray(list) ? list : [])
+    .map((m) => ({
+      name: String((m && m.name) || '').trim().slice(0, 80),
+      when: String((m && m.when) || '').trim().slice(0, 80),
+      place: String((m && m.place) || '').trim().slice(0, 120),
+      blurb: String((m && m.blurb) || '').trim().slice(0, 240),
+    }))
+    .filter((m) => m.name)
+    .slice(0, 12);
+}
+function renderSiteMinistries() {
+  const box = $('site-ministries');
+  box.replaceChildren();
+  if (S.siteMinistries.length === 0) {
+    box.appendChild(h('p', 'muted', 'No ministries listed yet.'));
+    return;
+  }
+  S.siteMinistries.forEach((m, i) => {
+    const row = h('div', 'minrow');
+    const fields = [
+      ['name', 'Ministry name', 80, false],
+      ['when', 'When it meets', 80, false],
+      ['place', 'Where it meets', 120, false],
+      ['blurb', 'A sentence about it', 240, true],
+    ];
+    for (const [key, label, max, area] of fields) {
+      const lab = h('label', null, label);
+      const input = document.createElement(area ? 'textarea' : 'input');
+      if (!area) input.type = 'text';
+      if (area) input.rows = 2;
+      input.maxLength = max;
+      input.value = m[key] || '';
+      input.addEventListener('input', () => { S.siteMinistries[i][key] = input.value; });
+      lab.appendChild(input);
+      row.appendChild(lab);
+    }
+    const actions = h('div', 'row-actions');
+    const up = h('button', 'btn secondary small', 'Move up');
+    up.type = 'button';
+    up.disabled = i === 0;
+    up.addEventListener('click', () => moveSiteMinistry(i, -1));
+    const down = h('button', 'btn secondary small', 'Move down');
+    down.type = 'button';
+    down.disabled = i === S.siteMinistries.length - 1;
+    down.addEventListener('click', () => moveSiteMinistry(i, 1));
+    const rm = h('button', 'btn danger small', 'Remove');
+    rm.type = 'button';
+    rm.addEventListener('click', () => {
+      S.siteMinistries.splice(i, 1);
+      renderSiteMinistries();
+    });
+    actions.appendChild(up);
+    actions.appendChild(down);
+    actions.appendChild(rm);
+    row.appendChild(actions);
+    box.appendChild(row);
+  });
+}
+function moveSiteMinistry(i, delta) {
+  const j = i + delta;
+  if (j < 0 || j >= S.siteMinistries.length) return;
+  const t = S.siteMinistries[i];
+  S.siteMinistries[i] = S.siteMinistries[j];
+  S.siteMinistries[j] = t;
+  renderSiteMinistries();
+}
+$('site-ministry-add').addEventListener('click', () => {
+  if (S.siteMinistries.length >= 12) {
+    setMsg('site-msg', 'Twelve ministries is the most the site holds.', 'err');
+    return;
+  }
+  S.siteMinistries.push({ name: '', when: '', place: '', blurb: '' });
+  renderSiteMinistries();
+});
 $('site-form').addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const giving = $('site-giving').value.trim();

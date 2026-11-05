@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ministries — Your People</title>
+<meta name="description" content="A church's ministries on Your People.">
+<link rel="icon" id="favicon" href="/assets/your-people-icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --cream:#FAF8F3; --green:#2E493A; --green-deep:#22382C; --gold:#C9A227;
+    --ink:#2B2B28; --muted:#6B6F66; --card:#FFFFFF; --line:#E4DFD2;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  html{scroll-behavior:smooth;scroll-padding-top:118px}
+  body{background:var(--cream);color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:16.5px;line-height:1.55}
+  h1,h2{font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;font-weight:normal}
+  .hidden{display:none !important}
+  a{color:var(--green)}
+  .wrap{max-width:780px;margin:0 auto;padding:0 20px}
+
+  /* sticky header — name/logo, Visit, Give */
+  header.top{position:sticky;top:0;z-index:20;background:var(--cream);
+    border-bottom:1px solid var(--line)}
+  header.top .hwrap{max-width:780px;margin:0 auto;padding:10px 20px;
+    display:flex;align-items:center;gap:10px}
+  header.top img{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#fff}
+  header.top .hname{font-family:"Cormorant Garamond",Georgia,serif;font-size:20px;font-weight:600;
+    margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* section links — a slim second row of the header; a link is
+     present only when its section will render for this church.
+     No menu, no dropdown: the row scrolls sideways if it must. */
+  header.top .hnav{max-width:780px;margin:0 auto;padding:0 20px;display:flex;gap:22px;
+    overflow-x:auto;border-top:1px solid var(--line);scrollbar-width:none}
+  header.top .hnav::-webkit-scrollbar{display:none}
+  header.top .hnav a{font-size:12.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    text-decoration:none;color:var(--muted);padding:9px 0;white-space:nowrap;min-height:40px;
+    display:inline-flex;align-items:center}
+  header.top .hnav a:hover{color:var(--green)}
+  .btn{display:inline-block;background:var(--green);color:#fff;border:1px solid var(--green);
+    border-radius:10px;padding:12px 22px;font:inherit;font-weight:600;cursor:pointer;
+    text-decoration:none;min-height:48px}
+  .btn:hover{background:var(--green-deep)}
+  .btn.small{padding:8px 16px;min-height:44px}
+  .btn.plain{background:transparent;color:var(--green)}
+  .btn.plain:hover{background:transparent;color:var(--green-deep)}
+
+  /* hero — the church's identity, framed: a panel in the surface
+     tone set into the deep tone, the church's own logo large in
+     a gold-ringed medallion and faint behind the words as a
+     watermark. A real photo, when there is one, still leads.
+     Layered FLAT tones only — no gradients, ever. A church with
+     no logo gets the same panel and type with no medallion:
+     nothing is faked to fill the space. */
+  #hero{background:var(--green-deep)}
+  #hero .hero-photo{display:block;width:100%;max-height:420px;object-fit:cover}
+  #hero .hero-inner{padding:30px 20px 38px}
+  .hero-panel{position:relative;overflow:hidden;background:var(--card);color:var(--ink);
+    border:1px solid var(--gold);outline:1px solid var(--line);outline-offset:5px;
+    padding:42px 26px 44px;text-align:center}
+  .hero-panel>*{position:relative;z-index:1}
+  .hero-panel>.hero-watermark{position:absolute;z-index:0;right:-58px;bottom:-64px;
+    width:250px;height:250px;border-radius:50%;object-fit:cover;opacity:.07;pointer-events:none}
+  .hero-medallion{width:104px;height:104px;border-radius:50%;border:1px solid var(--gold);
+    outline:1px solid var(--line);outline-offset:5px;margin:0 auto 24px;padding:4px;
+    background:var(--cream)}
+  .hero-medallion img{width:100%;height:100%;border-radius:50%;object-fit:cover;
+    display:block;background:#fff}
+  #hero h1{font-size:42px;font-weight:600;line-height:1.1;margin:0 0 10px}
+  .hero-rule{width:54px;border-top:1px solid var(--gold);margin:14px auto 20px}
+  #hero .town{font-size:13px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 4px}
+  #hero .herotime{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;
+    font-size:20px;margin:0;white-space:pre-wrap}
+  #hero .hero-actions{margin-top:24px;display:flex;flex-wrap:wrap;gap:14px;
+    align-items:center;justify-content:center}
+  #hero .btn{background:var(--gold);color:#241105;border-color:var(--gold)}
+  #hero .btn:hover{background:var(--gold);color:#241105}
+  #hero a.textlink{color:var(--green);font-size:16px}
+  html[data-theme="dark"] #hero a.textlink{color:var(--gold)}
+
+  main.wrap{padding-top:8px;padding-bottom:56px}
+  section.block{padding:26px 0 6px;border-top:1px solid var(--line)}
+  section.block:first-child{border-top:none}
+  /* section headings are labels: letterspaced small caps with a
+     hairline running to the edge. Gold only where it can be read
+     (dark palettes); the deep brand tone carries light ones. */
+  section.block>h2{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    font-size:13px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--green-deep);margin:0 0 18px;display:flex;align-items:center;gap:14px}
+  section.block>h2::after{content:"";flex:1;border-top:1px solid var(--line)}
+  html[data-theme="dark"] section.block>h2{color:var(--gold)}
+  .times{white-space:pre-wrap;font-size:17px}
+  /* the visit block is a card, its address set in display type */
+  #visit-view{background:var(--card);border:1px solid var(--line);
+    border-top:2px solid var(--green);padding:24px 22px}
+  .addr{white-space:pre-wrap;margin:10px 0 0}
+  #visit .addr{font-family:"Cormorant Garamond",Georgia,serif;font-size:29px;
+    font-weight:600;line-height:1.2}
+  #directions{background:transparent;color:var(--green);border-color:var(--green)}
+  #directions:hover{background:transparent;color:var(--green-deep);border-color:var(--green-deep)}
+  html[data-theme="dark"] #directions{color:var(--gold);border-color:var(--gold)}
+  /* the welcome, given the weight of a pull-quote — the words
+     remain exactly the church's own */
+  .welcome{position:relative;font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;
+    font-weight:500;font-size:clamp(23px,5.5vw,28px);line-height:1.35;white-space:pre-wrap;
+    max-width:640px;padding:4px 0 0 42px}
+  .welcome::before{content:"\201C";position:absolute;left:-2px;top:-24px;font-size:84px;
+    line-height:1;font-style:normal;color:var(--green)}
+  .viewall{margin:14px 0 0;font-size:15px}
+  /* ministries — the church's own ministries as cards: the
+     name in display type, when and where beneath it, and the
+     leader's sentence in their own words */
+  .mincard{background:var(--card);border:1px solid var(--line);
+    border-top:2px solid var(--green);padding:18px 20px;margin:0 0 14px}
+  .mincard .t{font-family:"Cormorant Garamond",Georgia,serif;font-size:24px;
+    font-weight:600;line-height:1.2}
+  .mincard .s{color:var(--muted);font-size:14.5px;margin-top:2px}
+  .mincard .b{white-space:pre-wrap;margin-top:6px}
+  /* ministry editing — homepage edit mode only; these fields
+     are never rendered for visitors */
+  .min-edit{border:1px dashed var(--green);border-radius:10px;
+    padding:12px 14px;margin:0 0 12px}
+  .min-edit .min-del{font:inherit;font-size:14px;cursor:pointer;margin-top:10px;
+    background:var(--card);color:#b3261e;border:1px solid #b3261e;
+    border-radius:8px;padding:6px 12px;min-height:40px}
+  .row{padding:11px 0;border-top:1px solid var(--line)}
+  .row:first-of-type{border-top:none;padding-top:2px}
+  .row .t{font-weight:700;font-size:17px}
+  .row .s{color:var(--muted);font-size:14.5px;margin-top:1px}
+  .row .b,.row .n{white-space:pre-wrap;margin-top:4px}
+  .sermon-featured .t{font-size:19px}
+  .appcard{border:1px solid var(--gold);outline:1px solid var(--line);outline-offset:4px;
+    border-radius:4px;background:var(--card);padding:26px 22px;text-align:center}
+  .appcard h2{margin-top:0;font-size:26px;font-weight:600}
+  /* the join code must never clip: modest size and spacing, and
+     it may wrap rather than overflow (the harness checks this) */
+  .appcard .code{font-size:clamp(20px,6vw,27px);font-weight:700;letter-spacing:.08em;
+    color:var(--green);font-family:"Cormorant Garamond",Georgia,serif;display:block;
+    margin:6px 0 2px;max-width:100%;overflow-wrap:anywhere}
+  .closing{padding:26px 0 2px;border-top:1px solid var(--line);text-align:center}
+  .closing .crule{width:54px;border-top:1px solid var(--gold);margin:0 auto 20px}
+  .closing p{font-family:"Cormorant Garamond",Georgia,serif;font-size:21px;margin:0 0 14px}
+  footer.foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:14px;color:var(--muted);text-align:center}
+  footer.foot .fbrand{color:var(--ink);font-family:"Cormorant Garamond",Georgia,serif;
+    font-size:17px;font-weight:600}
+
+  .center-card{max-width:520px;margin:10vh auto 0;background:var(--card);
+    border:1px solid var(--line);border-radius:14px;padding:28px;text-align:center}
+  .center-card .mark{width:56px;height:56px;border-radius:50%;background:var(--green);
+    color:var(--gold);font-size:28px;line-height:56px;text-align:center;margin:0 auto 12px;
+    font-family:Georgia,serif}
+
+  /* leader edit-in-place — only ever rendered for a signed-in
+     leader of this church; visitors' DOM never contains it. */
+  #editbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);
+    border-top:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;
+    gap:10px;align-items:center;justify-content:center}
+  #editbar .who{font-size:14.5px;color:var(--muted);margin-right:auto}
+  #editbar .msg{font-size:14.5px;width:100%;text-align:center}
+  #editbar .msg.err{color:#b3261e}
+  #editbar .msg.ok{color:var(--green)}
+  #visitorstrip{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);
+    border-top:1px dashed var(--green);padding:7px 16px;display:flex;gap:12px;
+    align-items:center;justify-content:center;font-size:14.5px;color:var(--muted)}
+  body.editing{padding-bottom:120px}
+  .edit-fields textarea,.edit-fields input{width:100%;font:inherit;color:var(--ink);
+    background:var(--card);border:1px solid var(--green);border-radius:10px;padding:10px 12px}
+  .edit-fields textarea{min-height:96px}
+  .edit-fields label{display:block;font-size:14px;color:var(--muted);margin:12px 0 4px}
+  .edit-fields label:first-child{margin-top:0}
+  .edit-note{border:1px dashed var(--green);border-radius:10px;padding:12px 14px;
+    color:var(--muted);font-size:15px;margin:0 0 6px}
+  .photo-strip{display:flex;flex-wrap:wrap;gap:10px}
+  .photo-strip figure{margin:0;width:calc(50% - 5px)}
+  .photo-strip img{width:100%;height:150px;object-fit:cover;border-radius:10px;
+    border:1px solid var(--line);display:block}
+  .photo-strip figcaption{display:flex;gap:8px;margin-top:6px}
+  .photo-strip button,.hero-photo-btns button{font:inherit;font-size:14px;cursor:pointer;
+    background:var(--card);color:var(--green);border:1px solid var(--green);
+    border-radius:8px;padding:6px 12px;min-height:40px}
+  .hero-photo-btns{display:flex;gap:8px;padding:10px 20px 0;max-width:780px;margin:0 auto}
+  @media (max-width:560px){ #hero h1{font-size:32px} }
+</style>
+</head>
+<body data-list="ministries">
+
+  <!-- loading -->
+  <div id="view-loading" class="wrap">
+    <div class="center-card">
+      <div class="mark">&#10022;</div>
+      <p style="color:var(--muted)">Loading&hellip;</p>
+    </div>
+  </div>
+
+  <!-- graceful states -->
+  <div id="view-state" class="wrap hidden">
+    <div class="center-card">
+      <div class="mark">&#10022;</div>
+      <h1 style="font-size:24px;margin:0 0 8px" id="state-title">Not switched on yet</h1>
+      <p style="color:var(--muted);margin:0" id="state-text">This church&rsquo;s site isn&rsquo;t switched on yet &mdash; check back soon.</p>
+      <p style="margin:16px 0 0"><a href="/">yourpeople.church</a></p>
+    </div>
+  </div>
+
+  <!-- the full list -->
+  <div id="view-list" class="hidden">
+    <header class="top">
+      <div class="hwrap">
+        <a id="home-link" href="#" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;margin-right:auto;min-width:0">
+          <img id="head-logo" class="hidden" alt="">
+          <span class="hname" id="head-name" style="margin-right:0"></span>
+        </a>
+        <a class="btn small hidden" id="head-give" href="#" target="_blank" rel="noopener">Give</a>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="block">
+        <h2 id="list-title">Ministries</h2>
+        <div id="list-box"></div>
+        <p id="list-empty" class="hidden" style="color:var(--muted)">No ministries have been added yet.</p>
+        <p class="viewall"><a id="back-link" href="#">Back to the church&rsquo;s page</a></p>
+      </section>
+
+      <footer class="foot">
+        <div class="fbrand" id="foot-name"></div>
+        <div style="margin-top:10px">This page is <span id="foot-name-2"></span>&rsquo;s own, made with <a href="/">Your People</a>.</div>
+      </footer>
+    </main>
+  </div>
+
+<script src="/site/list-page.js?v=2"></script>
+</body>
+</html>

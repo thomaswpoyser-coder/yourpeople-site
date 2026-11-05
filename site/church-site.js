@@ -14,12 +14,22 @@
 
    Layout (v2, from the Nov 2026 layout research): sticky header,
    hero, visit block, the church's own welcome, announcements,
-   upcoming events, recent sermons, give, the app card, a closing
-   strip, footer. The template supplies ONLY bare functional
-   labels — every sentence on the page is the church's own, from
-   its data. Sections with no data hide; the hero with no photo is
-   a flat typographic variant, never a stock or generated image;
-   there are no gradients anywhere.
+   ministries, upcoming events, recent sermons, give, the app
+   card, a closing strip, footer. The template supplies ONLY bare
+   functional labels — every sentence on the page is the church's
+   own, from its data. Sections with no data hide; the hero with
+   no photo is a flat typographic variant, never a stock or
+   generated image; there are no gradients anywhere.
+
+   v4 adds ministries: the church's own list of the groups and
+   gatherings it runs (settings.site.ministries, served trimmed
+   and capped by the function) — name, when it meets, where, and
+   one short sentence, all in the leader's own words. Standing
+   invitations, so they sit after the announcements and before
+   the dated events. Four cards on the homepage; the full list
+   lives on /site/ministries.html. The header's Ministries link
+   exists only when the church has listed at least one, and
+   leaders edit the cards in place like everything else here.
 
    v3 (the approved richer treatment + real sub-pages): serif
    display type, letterspaced small-cap section labels, the
@@ -128,6 +138,31 @@ function townFromAddress(address) {
 function directionsUrl(data) {
   const q = (data.name + ' ' + (data.address || '')).trim();
   return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+}
+
+/* Ministries are leader-written and arrive sanitized from the
+   function; this is the render-side twin of that shaping (the
+   same caps, nameless entries dropped) so an older deployed
+   function can never push an oversized card onto the page, and
+   the edit form and the save share one cleaning rule. */
+function cleanMinistries(list) {
+  return (Array.isArray(list) ? list : [])
+    .map((m) => ({
+      name: String((m && m.name) || '').trim().slice(0, 80),
+      when: String((m && m.when) || '').trim().slice(0, 80),
+      place: String((m && m.place) || '').trim().slice(0, 120),
+      blurb: String((m && m.blurb) || '').trim().slice(0, 240),
+    }))
+    .filter((m) => m.name)
+    .slice(0, 12);
+}
+function ministryCard(m) {
+  const card = h('div', 'mincard');
+  card.appendChild(h('div', 't', m.name));
+  const line = [m.when, m.place].filter(Boolean).join(' · ');
+  if (line) card.appendChild(h('div', 's', line));
+  if (m.blurb) card.appendChild(h('div', 'b', m.blurb));
+  return card;
 }
 
 /* The browser tab carries the church's identity too: its logo
@@ -257,6 +292,22 @@ function render(data) {
     }
   }
 
+  // ministries — the church's own list, in the leaders' words.
+  // Four cards here; when the list runs longer, its full page
+  // takes the rest. The section and its header link exist only
+  // when the church has listed at least one ministry.
+  const ministries = cleanMinistries(data.ministries);
+  $('sec-ministries').classList.toggle('hidden', ministries.length === 0);
+  $('nav-ministries').classList.toggle('hidden', ministries.length === 0);
+  if (ministries.length > 0) {
+    const box = $('site-ministries');
+    box.replaceChildren();
+    for (const m of ministries.slice(0, 4)) box.appendChild(ministryCard(m));
+    const overflow = ministries.length > 4;
+    $('ministries-all-wrap').classList.toggle('hidden', !overflow);
+    if (overflow) $('ministries-all').href = pageUrl('ministries.html');
+  }
+
   // upcoming events — future only, soonest first, at most five.
   const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
   const events = (Array.isArray(data.events) ? data.events : [])
@@ -358,7 +409,7 @@ function render(data) {
 /* ---------------- edit-in-place (leaders only) ---------------- */
 const PAGE = {
   data: null, client: null, user: null, settings: null,
-  photoPaths: [], editing: false, visitor: false,
+  photoPaths: [], ministries: [], editing: false, visitor: false,
 };
 /* Every gate in the edit-bar path logs why it did or didn't
    open — visible in the browser console, invisible on the page. */
@@ -601,6 +652,14 @@ function enterEdit() {
   $('sec-give').classList.remove('hidden');
   $('give-edit').classList.remove('hidden');
   if (!data.givingUrl) $('site-give-link').parentElement.classList.add('hidden');
+  // ministries edit in place: the section shows even when the
+  // church has none yet, so the first one can be added here.
+  PAGE.ministries = cleanMinistries(data.ministries).map((m) => ({ ...m }));
+  $('sec-ministries').classList.remove('hidden');
+  $('site-ministries').classList.add('hidden');
+  $('ministries-all-wrap').classList.add('hidden');
+  $('ministries-edit').classList.remove('hidden');
+  renderMinistryEditor();
   $('sec-photos-edit').classList.remove('hidden');
   $('hero-photo-btns').classList.toggle('hidden', PAGE.photoPaths.length === 0);
   renderPhotoStrip();
@@ -616,6 +675,8 @@ function exitEdit() {
   $('welcome-edit').classList.add('hidden');
   $('give-edit').classList.add('hidden');
   $('site-give-link').parentElement.classList.remove('hidden');
+  $('ministries-edit').classList.add('hidden');
+  $('site-ministries').classList.remove('hidden');
   $('sec-photos-edit').classList.add('hidden');
   $('hero-photo-btns').classList.add('hidden');
 }
@@ -624,6 +685,56 @@ function cancelEdit() {
   exitEdit();
   render(PAGE.data);
   barView();
+}
+
+/* The ministries editor: one field set per ministry, working on
+   PAGE.ministries; the values flow straight from the inputs, and
+   Save cleans the list (trims, caps, drops the nameless) the
+   same way the function will. The guidance line and these
+   fields exist only in edit mode — the public page never
+   contains them. */
+function renderMinistryEditor() {
+  const box = $('ministries-edit-list');
+  box.replaceChildren();
+  PAGE.ministries.forEach((m, i) => {
+    const wrap = h('div', 'min-edit');
+    const fields = [
+      ['name', 'Ministry name', false, 80],
+      ['when', 'When it meets', false, 80],
+      ['place', 'Where it meets', false, 120],
+      ['blurb', 'A sentence about it', true, 240],
+    ];
+    for (const [key, label, area, max] of fields) {
+      const lab = h('label', null, label);
+      const input = document.createElement(area ? 'textarea' : 'input');
+      if (!area) input.type = 'text';
+      input.value = m[key] || '';
+      input.maxLength = max;
+      input.addEventListener('input', () => { PAGE.ministries[i][key] = input.value; });
+      lab.appendChild(input);
+      wrap.appendChild(lab);
+    }
+    const del = h('button', 'min-del', 'Remove this ministry');
+    del.type = 'button';
+    del.addEventListener('click', () => {
+      PAGE.ministries.splice(i, 1);
+      renderMinistryEditor();
+    });
+    wrap.appendChild(del);
+    box.appendChild(wrap);
+  });
+}
+function addMinistry() {
+  if (PAGE.ministries.length >= 12) {
+    barMsg('Twelve ministries is the most the page holds.', 'err');
+    return;
+  }
+  PAGE.ministries.push({ name: '', when: '', place: '', blurb: '' });
+  renderMinistryEditor();
+  const cards = $('ministries-edit-list').querySelectorAll('.min-edit');
+  const last = cards[cards.length - 1];
+  const first = last ? last.querySelector('input') : null;
+  if (first) first.focus();
 }
 
 async function readFreshSettings() {
@@ -659,6 +770,7 @@ async function saveEdit() {
     serviceTimes: $('ed-times').value.trim(),
     address: $('ed-address').value.trim(),
     photos: [...PAGE.photoPaths],
+    ministries: cleanMinistries(PAGE.ministries),
   };
   const ok = await writeSettings(fields, giving);
   if (!ok) {
@@ -671,6 +783,7 @@ async function saveEdit() {
     address: fields.address,
     givingUrl: giving,
     photos: PAGE.photoPaths.map((p) => PHOTO_PREFIX + p),
+    ministries: fields.ministries,
   });
   exitEdit();
   render(PAGE.data);
@@ -776,6 +889,7 @@ function resolveLookup() {
 }
 
 async function load() {
+  $('ministry-add').addEventListener('click', addMinistry);
   $('photo-add').addEventListener('click', addPhoto);
   $('photo-remove').addEventListener('click', () => {
     if (PAGE.photoPaths[0]) removePhoto(PAGE.photoPaths[0]);

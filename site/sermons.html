@@ -114,6 +114,22 @@
   .welcome::before{content:"\201C";position:absolute;left:-2px;top:-24px;font-size:84px;
     line-height:1;font-style:normal;color:var(--green)}
   .viewall{margin:14px 0 0;font-size:15px}
+  /* ministries — the church's own ministries as cards: the
+     name in display type, when and where beneath it, and the
+     leader's sentence in their own words */
+  .mincard{background:var(--card);border:1px solid var(--line);
+    border-top:2px solid var(--green);padding:18px 20px;margin:0 0 14px}
+  .mincard .t{font-family:"Cormorant Garamond",Georgia,serif;font-size:24px;
+    font-weight:600;line-height:1.2}
+  .mincard .s{color:var(--muted);font-size:14.5px;margin-top:2px}
+  .mincard .b{white-space:pre-wrap;margin-top:6px}
+  /* ministry editing — homepage edit mode only; these fields
+     are never rendered for visitors */
+  .min-edit{border:1px dashed var(--green);border-radius:10px;
+    padding:12px 14px;margin:0 0 12px}
+  .min-edit .min-del{font:inherit;font-size:14px;cursor:pointer;margin-top:10px;
+    background:var(--card);color:#b3261e;border:1px solid #b3261e;
+    border-radius:8px;padding:6px 12px;min-height:40px}
   .row{padding:11px 0;border-top:1px solid var(--line)}
   .row:first-of-type{border-top:none;padding-top:2px}
   .row .t{font-weight:700;font-size:17px}
@@ -221,6 +237,6 @@
     </main>
   </div>
 
-<script src="/site/list-page.js?v=1"></script>
+<script src="/site/list-page.js?v=2"></script>
 </body>
 </html>

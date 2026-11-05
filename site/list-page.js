@@ -1,14 +1,18 @@
 'use strict';
 /* =====================================================================
-   Your People — a church's full sermon / event list (sub-pages).
+   Your People — a church's full sermon / event / ministry list
+   (sub-pages).
 
-   /site/sermons.html and /site/events.html are the real rooms
-   behind the homepage's capped sections: every published sermon,
-   newest first; every upcoming event, soonest first. They are
-   addressed exactly like the homepage — ?c=<join code> or
-   ?s=<slug> — and read from the same church-site Edge Function,
-   asking for the full list (?sermons=1 / ?events=1; until the
-   function is redeployed with those modes, it answers with its
+   /site/sermons.html, /site/events.html and /site/ministries.html
+   are the real rooms behind the homepage's capped sections:
+   every published sermon, newest first; every upcoming event,
+   soonest first; every ministry the church listed, in the
+   leaders' chosen order. They are addressed exactly like the
+   homepage — ?c=<join code> or ?s=<slug> — and read from the
+   same church-site Edge Function, asking for the full list
+   (?sermons=1 / ?events=1; ministries ride in the standard
+   payload, already whole at the function's cap of twelve; until
+   the function is redeployed with these, it answers with its
    standard capped payload and the page shows what it gets).
 
    Read-only by design: editing lives on the homepage. Brand,
@@ -138,6 +142,26 @@ function renderSermons(data) {
   }
 }
 
+/* The ministry card — the twin of the homepage renderer's, so
+   a ministry reads the same here as there. */
+function ministryCard(m) {
+  const card = h('div', 'mincard');
+  card.appendChild(h('div', 't', m.name));
+  const line = [m.when, m.place].filter(Boolean).join(' · ');
+  if (line) card.appendChild(h('div', 's', line));
+  if (m.blurb) card.appendChild(h('div', 'b', m.blurb));
+  return card;
+}
+
+function renderMinistries(data) {
+  const ministries = (Array.isArray(data.ministries) ? data.ministries : [])
+    .filter((m) => m && typeof m.name === 'string' && m.name.trim());
+  $('list-empty').classList.toggle('hidden', ministries.length > 0);
+  const box = $('list-box');
+  box.replaceChildren();
+  for (const m of ministries) box.appendChild(ministryCard(m));
+}
+
 function renderEvents(data) {
   const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
   const events = (Array.isArray(data.events) ? data.events : [])
@@ -157,7 +181,7 @@ function renderEvents(data) {
 
 async function load() {
   const kind = document.body && document.body.dataset ? document.body.dataset.list : '';
-  if (kind !== 'sermons' && kind !== 'events') {
+  if (kind !== 'sermons' && kind !== 'events' && kind !== 'ministries') {
     state('Not switched on yet', 'This church’s site isn’t switched on yet — check back soon.');
     return;
   }
@@ -168,7 +192,7 @@ async function load() {
   }
   let resp;
   try {
-    resp = await fetch(SUPABASE_URL + '/functions/v1/church-site?' + look.query + (kind === 'sermons' ? '&sermons=1' : '&events=1'), {
+    resp = await fetch(SUPABASE_URL + '/functions/v1/church-site?' + look.query + (kind === 'sermons' ? '&sermons=1' : kind === 'events' ? '&events=1' : ''), {
       headers: { 'apikey': SUPABASE_ANON_KEY },
     });
   } catch (e) {
@@ -200,7 +224,7 @@ async function load() {
     return;
   }
 
-  const label = kind === 'sermons' ? 'Sermons' : 'Events';
+  const label = kind === 'sermons' ? 'Sermons' : kind === 'events' ? 'Events' : 'Ministries';
   document.title = label + ' — ' + data.name;
   applyBrand(data.brand);
   if (data.logoUrl) setFavicon(data.logoUrl);
@@ -220,7 +244,8 @@ async function load() {
   $('foot-name-2').textContent = data.name;
 
   if (kind === 'sermons') renderSermons(data);
-  else renderEvents(data);
+  else if (kind === 'events') renderEvents(data);
+  else renderMinistries(data);
   show('view-list');
 }
 load();
