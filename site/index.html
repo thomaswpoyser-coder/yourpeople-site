@@ -92,6 +92,9 @@
   #editbar .msg{font-size:14.5px;width:100%;text-align:center}
   #editbar .msg.err{color:#b3261e}
   #editbar .msg.ok{color:var(--green)}
+  #visitorstrip{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);
+    border-top:1px dashed var(--green);padding:7px 16px;display:flex;gap:12px;
+    align-items:center;justify-content:center;font-size:14.5px;color:var(--muted)}
   body.editing{padding-bottom:120px}
   .edit-fields textarea,.edit-fields input{width:100%;font:inherit;color:var(--ink);
     background:var(--card);border:1px solid var(--green);border-radius:10px;padding:10px 12px}
@@ -246,10 +249,17 @@
   <!-- leader edit bar (rendered by the script only for leaders) -->
   <div id="editbar" class="hidden"></div>
 
+  <!-- leader visitor-view strip (rendered by the script only
+       for leaders who asked to see the page as visitors do) -->
+  <div id="visitorstrip" class="hidden"></div>
+
 <!-- This shell is deployed twice: as /site/ and as the root
      404.html (the vanity-address fallback: Pages serves it for
      yourpeople.church/<address>). Keep the two copies identical;
-     the renderer they share lives in /site/church-site.js. -->
-<script src="/site/church-site.js"></script>
+     the renderer they share lives in /site/church-site.js. The
+     ?v= on the script tag is bumped whenever the renderer
+     changes, so a just-updated page is never masked by a
+     browser's cached copy of the previous renderer. -->
+<script src="/site/church-site.js?v=3"></script>
 </body>
 </html>

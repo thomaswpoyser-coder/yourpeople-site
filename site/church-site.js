@@ -28,6 +28,19 @@
    read-merge-write of groups.settings the desk tab uses. Anyone
    else's page contains no edit UI at all. All church-written text
    goes through textContent — nothing is ever parsed as HTML.
+
+   Session pickup mirrors the desk exactly: same client config,
+   so the same storage key (sb-<project ref>-auth-token) on the
+   same origin. The session is acquired three ways — getSession,
+   then the auth-state event, then an explicit refresh — because
+   a one-shot getSession on a cold client can miss a stored
+   session whose access token has expired. Every gate in that
+   path logs its reason to the console ([yourpeople edit] …):
+   a silent no-bar once cost a whole debugging round. A leader
+   can also flip to "View as visitor" (?view=visitor) to see the
+   page exactly as the public does, with only a slim return
+   strip added; the mode never signs anyone out and is ignored
+   entirely for non-leaders.
    ===================================================================== */
 const SUPABASE_URL = 'https://wsmqkhljjhaueahqizfr.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_4eoGwVeVNyN7jn-wmJsUkg_nShqdukt';
@@ -295,8 +308,15 @@ function render(data) {
 /* ---------------- edit-in-place (leaders only) ---------------- */
 const PAGE = {
   data: null, client: null, user: null, settings: null,
-  photoPaths: [], editing: false,
+  photoPaths: [], editing: false, visitor: false,
 };
+/* Every gate in the edit-bar path logs why it did or didn't
+   open — visible in the browser console, invisible on the page. */
+function elog() {
+  try {
+    console.warn.apply(console, ['[yourpeople edit]'].concat([].slice.call(arguments)));
+  } catch (e) { /* logging never breaks the page */ }
+}
 function photoPathsFromUrls(urls) {
   return (Array.isArray(urls) ? urls : [])
     .filter((u) => typeof u === 'string' && u.startsWith(PHOTO_PREFIX))
@@ -312,6 +332,10 @@ function barView(msg, kind) {
   btn.type = 'button';
   btn.addEventListener('click', enterEdit);
   bar.appendChild(btn);
+  const vb = h('button', 'btn small plain', 'View as visitor');
+  vb.type = 'button';
+  vb.addEventListener('click', () => { setVisitorParam(true); enterVisitorMode(); });
+  bar.appendChild(vb);
   if (msg) {
     const m = h('span', 'msg ' + (kind || ''), msg);
     bar.appendChild(m);
@@ -340,39 +364,173 @@ function barMsg(msg, kind) {
   bar.appendChild(m);
 }
 
+/* "View as visitor": the leader sees the pure public render.
+   Only the return strip is added, and it exists only because a
+   leader session was confirmed — the mode rides on the same
+   initEdit gate as the edit bar itself, so the ?view=visitor
+   parameter alone shows a non-leader nothing at all. It never
+   signs out and never touches the desk's session. */
+function visitorWanted() {
+  try { return new URLSearchParams(window.location.search).get('view') === 'visitor'; }
+  catch (e) { return false; }
+}
+function setVisitorParam(on) {
+  try {
+    const url = new URL(window.location.href);
+    if (on) url.searchParams.set('view', 'visitor');
+    else url.searchParams.delete('view');
+    window.history.replaceState(null, '', url.toString());
+  } catch (e) { /* the mode still holds for this view */ }
+}
+function enterVisitorMode() {
+  if (PAGE.editing) exitEdit();
+  PAGE.visitor = true;
+  $('editbar').classList.add('hidden');
+  const strip = $('visitorstrip');
+  strip.replaceChildren();
+  strip.appendChild(h('span', null, 'You’re viewing this page as visitors see it.'));
+  const back = h('button', 'btn small', 'Back to editing');
+  back.type = 'button';
+  back.addEventListener('click', exitVisitorMode);
+  strip.appendChild(back);
+  strip.classList.remove('hidden');
+}
+function exitVisitorMode() {
+  PAGE.visitor = false;
+  setVisitorParam(false);
+  $('visitorstrip').classList.add('hidden');
+  barView();
+}
+
+/* Find the desk's session in this browser. The client config is
+   identical to the desk's, so the stored session sits under the
+   same key on the same origin — but a cold client's one-shot
+   getSession can still come back empty when the stored access
+   token has expired and its inline refresh fails (the desk tab's
+   own refresher is the usual contender). So: getSession, then
+   the auth-state event the desk itself routes on, then an
+   explicit refresh. Every step logs its outcome. */
+async function acquireSession(client) {
+  let eventSession = null;
+  let sub = null;
+  const eventPromise = new Promise((resolve) => {
+    try {
+      const r = client.auth.onAuthStateChange((_event, session) => {
+        if (session && session.user && !eventSession) {
+          eventSession = session;
+          resolve(session);
+        }
+      });
+      sub = r && r.data ? r.data.subscription : null;
+    } catch (e) { resolve(null); }
+    setTimeout(() => resolve(eventSession), 1800);
+  });
+  const finish = (s, via) => {
+    try { if (sub) sub.unsubscribe(); } catch (e) { /* already gone */ }
+    if (s) elog('session found via ' + via + ' —', s.user.email || s.user.id);
+    return s;
+  };
+  try {
+    const res = await client.auth.getSession();
+    const s = res && res.data ? res.data.session : null;
+    if (s && s.user) return finish(s, 'getSession');
+    if (res && res.error) elog('getSession error —', res.error.message || res.error);
+  } catch (e) { elog('getSession threw —', (e && e.message) || e); }
+  const ev = await eventPromise;
+  if (ev) return finish(ev, 'auth state change');
+  try { if (sub) sub.unsubscribe(); } catch (e) { /* already gone */ }
+  try {
+    const res = await client.auth.refreshSession();
+    const s = res && res.data ? res.data.session : null;
+    if (s && s.user) return finish(s, 'refreshSession');
+    if (res && res.error) elog('refreshSession error —', res.error.message || res.error);
+  } catch (e) { elog('refreshSession threw —', (e && e.message) || e); }
+  return null;
+}
+
+/* The leadership read. An error here (a stale token being the
+   usual cause) is NOT the same answer as "not a member", so it
+   is checked explicitly, retried once after a refresh, and
+   logged either way. */
+async function readMembership(client, userId, groupId) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let mem = null;
+    try {
+      mem = await client
+        .from('memberships')
+        .select('group_id, role')
+        .eq('user_id', userId)
+        .eq('group_id', groupId);
+    } catch (e) {
+      elog('memberships read threw (attempt ' + (attempt + 1) + ') —', (e && e.message) || e);
+      mem = { data: null, error: e };
+    }
+    if (mem && !mem.error) return { rows: mem.data || [], error: null };
+    elog('memberships read failed (attempt ' + (attempt + 1) + ') —',
+      (mem && mem.error && (mem.error.message || mem.error.code)) || 'unknown error');
+    if (attempt === 0) {
+      try { await client.auth.refreshSession(); }
+      catch (e) { elog('refresh before retry threw —', (e && e.message) || e); }
+    }
+  }
+  return { rows: [], error: true };
+}
+
 async function initEdit(data) {
   PAGE.data = data;
-  if (!data.groupId) return;
-  if (!window.supabase || typeof window.supabase.createClient !== 'function') return;
+  if (!data.groupId) {
+    elog('the church-site payload carries no groupId — the deployed church-site function is an older version; edit bar not shown.');
+    return;
+  }
+  if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+    elog('the Supabase client library did not load; edit bar not shown.');
+    return;
+  }
   let client;
   try {
     client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } catch (e) { return; }
-  let session = null;
-  try {
-    const res = await client.auth.getSession();
-    session = res && res.data ? res.data.session : null;
-  } catch (e) { return; }
-  if (!session || !session.user) return;
+  } catch (e) {
+    elog('createClient threw —', (e && e.message) || e);
+    return;
+  }
+  const session = await acquireSession(client);
+  if (!session) {
+    elog('no signed-in session found in this browser. The desk session lives under the same origin and storage key, so this means: signed out here, a different browser/profile, or the stored session could not be refreshed. Edit bar not shown; the page is unaffected.');
+    return;
+  }
   PAGE.client = client;
   PAGE.user = session.user;
+  const mem = await readMembership(client, session.user.id, data.groupId);
+  if (mem.error) {
+    elog('membership read failed after a retry; edit bar not shown.');
+    return;
+  }
+  if (!mem.rows.some((r) => r.role === 'leader')) {
+    elog('signed in as', session.user.email || session.user.id,
+      '— membership rows for this church:', mem.rows.length,
+      '(' + mem.rows.map((r) => r.role).join(', ') + ') — not a leader; edit bar not shown.');
+    return;
+  }
   try {
-    const mem = await client
-      .from('memberships')
-      .select('group_id, role')
-      .eq('user_id', session.user.id)
-      .eq('group_id', data.groupId);
-    const rows = (mem && mem.data) || [];
-    if (!rows.some((r) => r.role === 'leader')) return;
     const grp = await client.from('groups').select('settings').eq('id', data.groupId).maybeSingle();
+    if (grp && grp.error) elog('group settings read failed —', grp.error.message || grp.error.code || 'unknown');
     PAGE.settings = grp && grp.data && grp.data.settings && typeof grp.data.settings === 'object'
       ? grp.data.settings : {};
-    const site = PAGE.settings.site && typeof PAGE.settings.site === 'object' ? PAGE.settings.site : {};
-    PAGE.photoPaths = Array.isArray(site.photos)
-      ? site.photos.filter((p) => typeof p === 'string')
-      : photoPathsFromUrls(data.photos);
-  } catch (e) { return; }
-  barView();
+  } catch (e) {
+    elog('group settings read threw —', (e && e.message) || e);
+    PAGE.settings = {};
+  }
+  const site = PAGE.settings.site && typeof PAGE.settings.site === 'object' ? PAGE.settings.site : {};
+  PAGE.photoPaths = Array.isArray(site.photos)
+    ? site.photos.filter((p) => typeof p === 'string')
+    : photoPathsFromUrls(data.photos);
+  if (visitorWanted()) {
+    elog('leader confirmed; ?view=visitor — showing the visitor view strip.');
+    enterVisitorMode();
+  } else {
+    elog('leader confirmed; showing the edit bar.');
+    barView();
+  }
 }
 
 function enterEdit() {
