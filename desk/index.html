@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your People — Church Desk</title>
+<link rel="icon" id="favicon" href="/assets/your-people-icon.svg" type="image/svg+xml">
 <style>
   :root{
     --cream:#FAF8F3; --green:#2E493A; --green-deep:#22382C; --gold:#C9A227;
@@ -436,6 +437,7 @@ function mixHex(a, b, t) {
 }
 function applyBrand(group) {
   const root = document.documentElement;
+  setFavicon(group && group.logo_url ? group.logo_url : null);
   const logo = $('brand-logo');
   if (group && group.logo_url) {
     logo.src = group.logo_url;
@@ -463,6 +465,20 @@ function applyBrand(group) {
   }
   root.dataset.theme = brand.mode === 'dark' ? 'dark' : 'light';
 }
+/* The browser tab carries identity too: the platform mark when
+   signed out or before a church loads, the current church's own
+   logo once one is applied. One <link rel="icon"> in the head,
+   href swapped here; sign-out restores the platform mark. */
+const PLATFORM_ICON = '/assets/your-people-icon.svg';
+function setFavicon(url) {
+  const link = $('favicon');
+  if (!link) return;
+  link.href = url || PLATFORM_ICON;
+  const ext = ((link.href.split('?')[0].match(/\.([a-z0-9]+)$/i) || [])[1] || '').toLowerCase();
+  const types = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', svg: 'image/svg+xml', webp: 'image/webp', ico: 'image/x-icon' };
+  if (types[ext]) link.setAttribute('type', types[ext]);
+  else link.removeAttribute('type');
+}
 function clearBrandVars() {
   const root = document.documentElement;
   for (const k of Object.keys(PLATFORM_VARS)) root.style.setProperty(k, PLATFORM_VARS[k]);
@@ -470,6 +486,7 @@ function clearBrandVars() {
 }
 function clearBrand() {
   clearBrandVars();
+  setFavicon(null);
   const logo = $('brand-logo');
   if (logo) { logo.classList.add('hidden'); logo.removeAttribute('src'); }
 }

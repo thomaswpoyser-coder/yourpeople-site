@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your People — church site</title>
 <meta name="description" content="A church's public page on Your People — service times, what's coming up, and a way in.">
+<link rel="icon" id="favicon" href="/assets/your-people-icon.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
 <style>
   :root{
     --cream:#FAF8F3; --green:#2E493A; --green-deep:#22382C; --gold:#C9A227;
@@ -12,53 +14,102 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
+  html{scroll-behavior:smooth}
   body{background:var(--cream);color:var(--ink);
-    font-family:Helvetica,Arial,sans-serif;font-size:16.5px;line-height:1.55}
-  h1,h2,.serif{font-family:Georgia,"Times New Roman",serif}
+    font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:16.5px;line-height:1.55}
+  h1,h2{font-family:Georgia,"Times New Roman",serif;font-weight:normal}
   .hidden{display:none !important}
-  .band{background:var(--green-deep);color:#fff;text-align:center;padding:44px 20px 38px}
-  .band .logo{width:104px;height:104px;border-radius:50%;object-fit:cover;
-    border:3px solid var(--gold);background:#fff;display:block;margin:0 auto 16px}
-  .band .mark{width:104px;height:104px;border-radius:50%;background:var(--green);
-    color:var(--gold);font-size:52px;line-height:104px;text-align:center;margin:0 auto 16px;
-    font-family:Georgia,serif}
-  .band h1{font-size:38px;font-weight:normal;margin:0 0 6px;line-height:1.15}
-  .band .addr{opacity:.85;font-size:15.5px;margin:0}
-  .hero{display:block;width:100%;max-height:380px;object-fit:cover}
-  .wrap{max-width:820px;margin:0 auto;padding:30px 20px 60px}
-  .welcome{font-size:19px;text-align:center;max-width:640px;margin:6px auto 8px;white-space:pre-wrap}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
-    padding:22px;margin:22px 0 0;box-shadow:0 1px 2px rgba(38,49,42,.04)}
-  .card h2{font-size:23px;font-weight:normal;color:var(--green-deep);margin:0 0 12px}
-  html[data-theme="dark"] .card h2{color:var(--ink)}
-  .times{white-space:pre-wrap;font-size:17px}
-  .event{padding:12px 0;border-top:1px solid var(--line)}
-  .event:first-of-type{border-top:none;padding-top:2px}
-  .event .t{font-weight:700;font-size:17px}
-  .event .s{color:var(--muted);font-size:14.5px;margin-top:1px}
-  .event .n{white-space:pre-wrap;margin-top:4px}
-  .news{padding:12px 0;border-top:1px solid var(--line)}
-  .news:first-of-type{border-top:none;padding-top:2px}
-  .news .t{font-weight:700;font-size:17px}
-  .news .s{color:var(--muted);font-size:14px}
-  .news .b{white-space:pre-wrap;margin-top:4px}
-  .photos{display:flex;flex-wrap:wrap;gap:10px}
-  .photos img{width:calc(50% - 5px);height:190px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
-  @media (max-width:560px){ .photos img{width:100%} }
+  a{color:var(--green)}
+  .wrap{max-width:780px;margin:0 auto;padding:0 20px}
+
+  /* sticky header — name/logo, Visit, Give */
+  header.top{position:sticky;top:0;z-index:20;background:var(--cream);
+    border-bottom:1px solid var(--line)}
+  header.top .hwrap{max-width:780px;margin:0 auto;padding:10px 20px;
+    display:flex;align-items:center;gap:10px}
+  header.top img{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#fff}
+  header.top .hname{font-family:Georgia,serif;font-size:18px;margin-right:auto;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header.top a.hbtn{font-size:15px;text-decoration:none;padding:8px 10px;min-height:44px;
+    display:inline-flex;align-items:center}
   .btn{display:inline-block;background:var(--green);color:#fff;border:1px solid var(--green);
-    border-radius:10px;padding:12px 24px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+    border-radius:10px;padding:12px 22px;font:inherit;font-weight:600;cursor:pointer;
+    text-decoration:none;min-height:48px}
   .btn:hover{background:var(--green-deep)}
-  .give{text-align:center}
-  .join{text-align:center}
-  .join .code{font-size:26px;font-weight:700;letter-spacing:2px;color:var(--green);
-    font-family:Georgia,serif;display:block;margin:8px 0 2px}
+  .btn.small{padding:8px 16px;min-height:44px}
+  .btn.plain{background:transparent;color:var(--green)}
+  .btn.plain:hover{background:transparent;color:var(--green-deep)}
+
+  /* hero — two first-class variants: a real photo, or type on a
+     flat brand colour. No gradients, ever. */
+  #hero{background:var(--green-deep);color:#fff}
+  #hero .hero-photo{display:block;width:100%;max-height:420px;object-fit:cover}
+  #hero .hero-inner{padding:38px 20px 42px}
+  #hero h1{font-size:40px;line-height:1.12;margin:0 0 8px}
+  #hero .town{font-size:18px;margin:0 0 2px;opacity:.92}
+  #hero .herotime{font-size:18px;margin:0;opacity:.92;white-space:pre-wrap}
+  #hero .hero-actions{margin-top:22px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+  #hero .btn{background:#fff;color:var(--green-deep);border-color:#fff}
+  #hero a.textlink{color:#fff;font-size:16px}
+
+  main.wrap{padding-top:8px;padding-bottom:56px}
+  section.block{padding:26px 0 6px;border-top:1px solid var(--line)}
+  section.block:first-child{border-top:none}
+  section.block h2{font-size:24px;color:var(--green-deep);margin:0 0 12px}
+  html[data-theme="dark"] section.block h2{color:var(--ink)}
+  .times{white-space:pre-wrap;font-size:17px}
+  .addr{white-space:pre-wrap;margin:10px 0 0}
+  .welcome{font-size:18.5px;white-space:pre-wrap;max-width:640px}
+  .row{padding:11px 0;border-top:1px solid var(--line)}
+  .row:first-of-type{border-top:none;padding-top:2px}
+  .row .t{font-weight:700;font-size:17px}
+  .row .s{color:var(--muted);font-size:14.5px;margin-top:1px}
+  .row .b,.row .n{white-space:pre-wrap;margin-top:4px}
+  .sermon-featured .t{font-size:19px}
+  .appcard{border:1px solid var(--line);border-radius:14px;background:var(--card);
+    padding:22px;text-align:center}
+  .appcard h2{margin-top:0}
+  .appcard .code{font-size:26px;font-weight:700;letter-spacing:2px;color:var(--green);
+    font-family:Georgia,serif;display:block;margin:6px 0 2px}
+  .closing{padding:26px 0 2px;border-top:1px solid var(--line)}
+  .closing p{font-size:18px;margin:0 0 14px}
+  footer.foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:14px;color:var(--muted)}
+  footer.foot .fbrand{color:var(--ink)}
+
   .center-card{max-width:520px;margin:10vh auto 0;background:var(--card);
     border:1px solid var(--line);border-radius:14px;padding:28px;text-align:center}
   .center-card .mark{width:56px;height:56px;border-radius:50%;background:var(--green);
     color:var(--gold);font-size:28px;line-height:56px;text-align:center;margin:0 auto 12px;
     font-family:Georgia,serif}
-  footer.foot{margin-top:44px;font-size:13.5px;color:var(--muted);text-align:center}
-  footer.foot a{color:var(--green)}
+
+  /* leader edit-in-place — only ever rendered for a signed-in
+     leader of this church; visitors' DOM never contains it. */
+  #editbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);
+    border-top:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;
+    gap:10px;align-items:center;justify-content:center}
+  #editbar .who{font-size:14.5px;color:var(--muted);margin-right:auto}
+  #editbar .msg{font-size:14.5px;width:100%;text-align:center}
+  #editbar .msg.err{color:#b3261e}
+  #editbar .msg.ok{color:var(--green)}
+  body.editing{padding-bottom:120px}
+  .edit-fields textarea,.edit-fields input{width:100%;font:inherit;color:var(--ink);
+    background:var(--card);border:1px solid var(--green);border-radius:10px;padding:10px 12px}
+  .edit-fields textarea{min-height:96px}
+  .edit-fields label{display:block;font-size:14px;color:var(--muted);margin:12px 0 4px}
+  .edit-fields label:first-child{margin-top:0}
+  .edit-note{border:1px dashed var(--green);border-radius:10px;padding:12px 14px;
+    color:var(--muted);font-size:15px;margin:0 0 6px}
+  .photo-strip{display:flex;flex-wrap:wrap;gap:10px}
+  .photo-strip figure{margin:0;width:calc(50% - 5px)}
+  .photo-strip img{width:100%;height:150px;object-fit:cover;border-radius:10px;
+    border:1px solid var(--line);display:block}
+  .photo-strip figcaption{display:flex;gap:8px;margin-top:6px}
+  .photo-strip button,.hero-photo-btns button{font:inherit;font-size:14px;cursor:pointer;
+    background:var(--card);color:var(--green);border:1px solid var(--green);
+    border-radius:8px;padding:6px 12px;min-height:40px}
+  .hero-photo-btns{display:flex;gap:8px;padding:10px 20px 0;max-width:780px;margin:0 auto}
+  @media (max-width:560px){ #hero h1{font-size:32px} }
 </style>
 </head>
 <body>
@@ -67,7 +118,7 @@
   <div id="view-loading" class="wrap">
     <div class="center-card">
       <div class="mark">&#10022;</div>
-      <p class="muted" style="color:var(--muted)">Loading this church&rsquo;s page&hellip;</p>
+      <p style="color:var(--muted)">Loading this church&rsquo;s page&hellip;</p>
     </div>
   </div>
 
@@ -75,7 +126,7 @@
   <div id="view-state" class="wrap hidden">
     <div class="center-card">
       <div class="mark">&#10022;</div>
-      <h1 class="serif" style="font-size:24px;font-weight:normal;margin:0 0 8px" id="state-title">Not switched on yet</h1>
+      <h1 style="font-size:24px;margin:0 0 8px" id="state-title">Not switched on yet</h1>
       <p style="color:var(--muted);margin:0" id="state-text">This church&rsquo;s site isn&rsquo;t switched on yet &mdash; check back soon.</p>
       <p style="margin:16px 0 0"><a href="/">yourpeople.church</a></p>
     </div>
@@ -83,52 +134,117 @@
 
   <!-- the church's page -->
   <div id="view-site" class="hidden">
-    <div class="band">
-      <img id="site-logo" class="logo hidden" alt="">
-      <div id="site-mark" class="mark hidden">&#10022;</div>
-      <h1 id="site-name">Church</h1>
-      <p class="addr" id="site-address"></p>
-    </div>
-    <img id="site-hero" class="hero hidden" alt="">
-    <div class="wrap">
-      <p class="welcome" id="site-welcome"></p>
+    <header class="top">
+      <div class="hwrap">
+        <img id="head-logo" class="hidden" alt="">
+        <span class="hname" id="head-name"></span>
+        <a class="hbtn" href="#visit" id="nav-visit">Visit</a>
+        <a class="btn small hidden" id="head-give" href="#" target="_blank" rel="noopener">Give</a>
+      </div>
+    </header>
 
-      <div class="card" id="card-times">
+    <section id="hero">
+      <img id="hero-photo" class="hero-photo hidden" alt="">
+      <div class="hero-photo-btns hidden" id="hero-photo-btns">
+        <button type="button" id="photo-replace">Replace photo</button>
+        <button type="button" id="photo-remove">Remove photo</button>
+        <input type="file" id="photo-replace-file" accept="image/*" class="hidden">
+      </div>
+      <div class="wrap hero-inner">
+        <h1 id="site-name">Church</h1>
+        <p class="town hidden" id="hero-town"></p>
+        <p class="herotime hidden" id="hero-time"></p>
+        <div class="hero-actions">
+          <a class="btn" href="#visit">Plan your visit</a>
+          <a class="textlink hidden" id="hero-sermon" href="#sermons">Listen to a recent sermon</a>
+        </div>
+      </div>
+    </section>
+
+    <main class="wrap">
+      <section class="block" id="visit">
         <h2>Service times</h2>
-        <div class="times" id="site-times"></div>
-      </div>
+        <div id="visit-view">
+          <div class="times" id="site-times"></div>
+          <p class="addr" id="site-address"></p>
+          <p style="margin:16px 0 0"><a class="btn hidden" id="directions" href="#" target="_blank" rel="noopener">Get directions</a></p>
+        </div>
+        <div class="edit-fields hidden" id="visit-edit">
+          <label for="ed-times">Service times</label>
+          <textarea id="ed-times" placeholder="One per line"></textarea>
+          <label for="ed-address">Address</label>
+          <textarea id="ed-address" style="min-height:56px"></textarea>
+        </div>
+      </section>
 
-      <div class="card hidden" id="card-events">
-        <h2>Coming up</h2>
-        <div id="site-events"></div>
-      </div>
+      <section class="block hidden" id="sec-welcome">
+        <div class="welcome" id="site-welcome"></div>
+        <div class="edit-fields hidden" id="welcome-edit">
+          <p class="edit-note hidden" id="welcome-empty-note">No welcome text yet. Write it in your church&rsquo;s own words:</p>
+          <label for="ed-welcome">Welcome text</label>
+          <textarea id="ed-welcome"></textarea>
+        </div>
+      </section>
 
-      <div class="card hidden" id="card-news">
-        <h2>Latest news</h2>
+      <section class="block hidden" id="sec-news">
+        <h2>Announcements</h2>
         <div id="site-news"></div>
-      </div>
+      </section>
 
-      <div class="card hidden" id="card-photos">
-        <h2>Around the church</h2>
-        <div class="photos" id="site-photos"></div>
-      </div>
+      <section class="block hidden" id="sec-events">
+        <h2>Upcoming events</h2>
+        <div id="site-events"></div>
+      </section>
 
-      <div class="card give hidden" id="card-give">
+      <section class="block hidden" id="sec-sermons">
+        <h2>Recent sermons</h2>
+        <div id="sermon-featured"></div>
+        <div id="site-sermons"></div>
+      </section>
+
+      <section class="block hidden" id="sec-give">
         <h2>Give</h2>
-        <p style="margin:0 0 14px">Giving is handled on the church&rsquo;s own giving page.</p>
-        <a class="btn" id="site-give-link" href="#" target="_blank" rel="noopener">Give online</a>
-      </div>
+        <p style="margin:0"><a class="btn" id="site-give-link" href="#" target="_blank" rel="noopener">Give online</a></p>
+        <div class="edit-fields hidden" id="give-edit">
+          <label for="ed-giving">Giving link</label>
+          <input id="ed-giving" type="url" placeholder="https://">
+        </div>
+      </section>
 
-      <div class="card join">
-        <h2>Join us in the app</h2>
-        <p style="margin:0">The whole church lives in the Your People app &mdash; the directory, the calendar, prayer and sermons. Get the app, tap Join, and use this code:</p>
-        <span class="code" id="site-code"></span>
-        <p style="margin:0;color:var(--muted);font-size:14.5px">Free for every member. Your leaders can help you get set up.</p>
-      </div>
+      <section class="block hidden" id="sec-photos-edit">
+        <h2>Church photos</h2>
+        <div class="photo-strip" id="photo-strip"></div>
+        <p style="margin:14px 0 0">
+          <input type="file" id="photo-add-file" accept="image/*">
+          <button type="button" class="btn small" id="photo-add">Add photo</button>
+        </p>
+        <p class="edit-note" style="margin-top:12px">The first photo is the banner across the top of this page.</p>
+      </section>
 
-      <footer class="foot">This page is <span id="foot-name">the church</span>&rsquo;s own, made with <a href="/">Your People</a>.</footer>
-    </div>
+      <section class="block hidden" id="sec-app">
+        <div class="appcard">
+          <h2>Join us in the app</h2>
+          <p style="margin:0">The whole church lives in the Your People app &mdash; the directory, the calendar, prayer and sermons. Get the app, tap Join, and use this code:</p>
+          <span class="code" id="site-code"></span>
+          <p style="margin:0;color:var(--muted);font-size:14.5px">Free for every member. Your leaders can help you get set up.</p>
+        </div>
+      </section>
+
+      <section class="closing hidden" id="sec-closing">
+        <p id="closing-text"></p>
+        <a class="btn hidden" id="closing-directions" href="#" target="_blank" rel="noopener">Get directions</a>
+      </section>
+
+      <footer class="foot">
+        <div class="fbrand" id="foot-name"></div>
+        <div id="foot-line"></div>
+        <div style="margin-top:10px">This page is <span id="foot-name-2"></span>&rsquo;s own, made with <a href="/">Your People</a>.</div>
+      </footer>
+    </main>
   </div>
+
+  <!-- leader edit bar (rendered by the script only for leaders) -->
+  <div id="editbar" class="hidden"></div>
 
 <!-- This shell is deployed twice: as /site/ and as the root
      404.html (the vanity-address fallback: Pages serves it for
