@@ -37,8 +37,9 @@
    faint behind the words as a watermark, the welcome as a
    pull-quote, the visit block as a display-type card — craft
    from the church's own identity only. The header's second row
-   links only to what exists for this church: Visit and
-   Announcements scroll to their sections; Sermons and Events go
+   links only to what exists for this church (its Visit link is
+   gone as of v5.1 — see below): Announcements scrolls to its
+   section; Sermons and Events go
    to real sub-pages (/site/sermons.html, /site/events.html,
    rendered by list-page.js from the same function — full lists,
    no caps) that carry this church's address (?c= or ?s=) with
@@ -60,6 +61,20 @@
    .solo mark below). The Visit heading follows the block's own
    contents: "Service times" only when times are actually set,
    never as a label over a bare address.
+
+   v5.1 (Thomas's review of the live v5 page): three controls
+   pointed at one tiny scroll — the header's Visit link, the
+   hero's "Plan your visit" button and the Visit block itself —
+   so the nav loses its Visit link, and the hero button earns
+   its name: with an address saved it opens directions to the
+   church (the same directions URL as the Visit block's own
+   button); with no address it hides, there being nothing to
+   plan with. In the two-up pairs the shorter column now
+   centres vertically, its slack split above and below rather
+   than pooled at the bottom; and a short welcome (under 140
+   characters) is set larger, a one-line welcome given the
+   presence of a display quote — the words still exactly the
+   church's own, nothing added.
 
    Edit-in-place: a signed-in LEADER of this church (the desk
    session carries over — same origin) gets a discreet edit bar
@@ -294,6 +309,14 @@ function render(data) {
   const sermons = Array.isArray(data.sermons) ? data.sermons : [];
   $('hero-sermon').classList.toggle('hidden', sermons.length === 0);
 
+  // "Plan your visit" does something real (v5.1): directions to
+  // the church's address — the same URL the Visit block's own
+  // Get directions opens. No address saved: nothing to plan
+  // with, so the button hides.
+  const planBtn = $('hero-plan');
+  planBtn.classList.toggle('hidden', !data.address);
+  if (data.address) planBtn.href = directionsUrl(data);
+
   // visit — never hides: at minimum the name of the gathering
   // place is here, with times / address / directions as supplied.
   // The heading follows the contents (v5): "Service times" only
@@ -312,6 +335,12 @@ function render(data) {
   // welcome — the church's own words, exactly; hides when empty.
   $('site-welcome').textContent = data.welcome || '';
   $('sec-welcome').classList.toggle('hidden', !data.welcome);
+  // a short welcome is set larger (v5.1): under 140 characters
+  // the pull-quote takes the display size, so a one-line
+  // welcome fills its half of the pair instead of huddling at
+  // its top. Longer welcomes keep the usual measure.
+  const welcomeLen = (data.welcome || '').trim().length;
+  $('site-welcome').classList.toggle('welcome-lg', welcomeLen > 0 && welcomeLen < 140);
 
   // announcements — newest first, at most three.
   const news = (Array.isArray(data.announcements) ? data.announcements : []).slice(0, 3);
@@ -456,6 +485,13 @@ function render(data) {
   if (town) fl.push(town);
   if (mainTime) fl.push(mainTime);
   $('foot-line').textContent = fl.join(' · ') + (fl.length ? ' · ' : '') + '© ' + new Date().getFullYear() + ' ' + data.name;
+
+  // the header's link row steps aside entirely when a church
+  // has none of the sections it links to (v5.1: the row's
+  // always-present Visit link is gone, so a bare church would
+  // otherwise wear an empty strip under the header).
+  const anyNav = [news.length, ministries.length, events.length, sermons.length].some((n) => n > 0);
+  $('hnav').classList.toggle('hidden', !anyNav);
 
   show('view-site');
 }

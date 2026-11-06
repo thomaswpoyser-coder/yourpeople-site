@@ -25,7 +25,7 @@
   a{color:var(--green)}
   .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 
-  /* sticky header — name/logo, Visit, Give */
+  /* sticky header — name/logo, Give */
   header.top{position:sticky;top:0;z-index:20;background:var(--cream);
     border-bottom:1px solid var(--line)}
   header.top .hwrap{max-width:1080px;margin:0 auto;padding:10px 20px;
@@ -93,8 +93,10 @@
      each block reads as a place; on wide screens two pairs —
      Visit beside Welcome, Give beside the app card — share a
      row, and a section left alone in its pair takes the whole
-     row (the renderer marks the pair .solo). Phones keep the
-     single stack, in the same order. */
+     row (the renderer marks the pair .solo). Within a shared
+     row the shorter column centres vertically, so its slack
+     splits above and below instead of pooling at the bottom
+     (v5.1). Phones keep the single stack, in the same order. */
   main{padding-bottom:56px}
   .in{max-width:1080px;margin:0 auto;padding:0 20px}
   section.block{padding:32px 0 38px;border-top:1px solid var(--line)}
@@ -103,7 +105,7 @@
   .pair>section.block{border-top:1px solid var(--line)}
   .pair>section.block:first-child{border-top:none}
   @media (min-width:900px){
-    .pair{display:grid;grid-template-columns:1fr 1fr;gap:8px 48px;align-items:start}
+    .pair{display:grid;grid-template-columns:1fr 1fr;gap:8px 48px;align-items:center}
     .pair>section.block{border-top:none}
     .pair.solo>section.block{grid-column:1/-1}
   }
@@ -143,6 +145,10 @@
   .welcome{position:relative;font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;
     font-weight:500;font-size:clamp(23px,5.5vw,28px);line-height:1.35;white-space:pre-wrap;
     max-width:640px;padding:4px 0 0 42px}
+  /* a short welcome stands larger (v5.1) — a one-line welcome
+     given the presence of a display quote; the renderer marks
+     welcomes under 140 characters .welcome-lg */
+  .welcome-lg{font-size:clamp(31px,6.5vw,40px);line-height:1.24}
   .welcome::before{content:"\201C";position:absolute;left:-2px;top:-24px;font-size:84px;
     line-height:1;font-style:normal;color:var(--green)}
   .viewall{margin:14px 0 0;font-size:15px}
@@ -253,8 +259,7 @@
         <span class="hname" id="head-name"></span>
         <a class="btn small hidden" id="head-give" href="#" target="_blank" rel="noopener">Give</a>
       </div>
-      <nav class="hnav" aria-label="On this page">
-        <a href="#visit" id="nav-visit">Visit</a>
+      <nav class="hnav" id="hnav" aria-label="On this page">
         <a href="#sec-news" id="nav-news" class="hidden">Announcements</a>
         <a href="#sec-ministries" id="nav-ministries" class="hidden">Ministries</a>
         <a href="#" id="nav-events" class="hidden">Events</a>
@@ -280,7 +285,7 @@
         <p class="town hidden" id="hero-town"></p>
         <p class="herotime hidden" id="hero-time"></p>
         <div class="hero-actions">
-          <a class="btn" href="#visit">Plan your visit</a>
+          <a class="btn hidden" id="hero-plan" href="#" target="_blank" rel="noopener">Plan your visit</a>
           <a class="textlink hidden" id="hero-sermon" href="#sec-sermons">Listen to a recent sermon</a>
         </div>
       </div>
@@ -414,6 +419,6 @@
      ?v= on the script tag is bumped whenever the renderer
      changes, so a just-updated page is never masked by a
      browser's cached copy of the previous renderer. -->
-<script src="/site/church-site.js?v=7"></script>
+<script src="/site/church-site.js?v=8"></script>
 </body>
 </html>
