@@ -23,12 +23,12 @@
   h1,h2{font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;font-weight:normal}
   .hidden{display:none !important}
   a{color:var(--green)}
-  .wrap{max-width:780px;margin:0 auto;padding:0 20px}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 
   /* sticky header — name/logo, Visit, Give */
   header.top{position:sticky;top:0;z-index:20;background:var(--cream);
     border-bottom:1px solid var(--line)}
-  header.top .hwrap{max-width:780px;margin:0 auto;padding:10px 20px;
+  header.top .hwrap{max-width:1080px;margin:0 auto;padding:10px 20px;
     display:flex;align-items:center;gap:10px}
   header.top img{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#fff}
   header.top .hname{font-family:"Cormorant Garamond",Georgia,serif;font-size:20px;font-weight:600;
@@ -36,7 +36,7 @@
   /* section links — a slim second row of the header; a link is
      present only when its section will render for this church.
      No menu, no dropdown: the row scrolls sideways if it must. */
-  header.top .hnav{max-width:780px;margin:0 auto;padding:0 20px;display:flex;gap:22px;
+  header.top .hnav{max-width:1080px;margin:0 auto;padding:0 20px;display:flex;gap:22px;
     overflow-x:auto;border-top:1px solid var(--line);scrollbar-width:none}
   header.top .hnav::-webkit-scrollbar{display:none}
   header.top .hnav a{font-size:12.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
@@ -51,55 +51,87 @@
   .btn.plain{background:transparent;color:var(--green)}
   .btn.plain:hover{background:transparent;color:var(--green-deep)}
 
-  /* hero — the church's identity, framed: a panel in the surface
-     tone set into the deep tone, the church's own logo large in
-     a gold-ringed medallion and faint behind the words as a
-     watermark. A real photo, when there is one, still leads.
-     Layered FLAT tones only — no gradients, ever. A church with
-     no logo gets the same panel and type with no medallion:
+  /* hero (v5, the de-listed pass) — the church's identity as a
+     full-bleed band, wall to wall, not a framed card floating in
+     a column: the deep brand tone across the whole viewport, the
+     church's name in display type directly on it, its logo in a
+     gold-ringed medallion. A saved photo — the first one only,
+     as always — becomes the backdrop, under a FLAT scrim of the
+     deep tone so the words stay legible; layered flat tones and
+     one flat scrim only, no gradients, ever. Without a photo the
+     logo also rests faint behind the words as a watermark. The
+     deep tone is dark in every palette the app can make, so the
+     hero's words are a fixed light tone in both modes. A church
+     with no logo and no photo gets the same wide band and type:
      nothing is faked to fill the space. */
-  #hero{background:var(--green-deep)}
-  #hero .hero-photo{display:block;width:100%;max-height:420px;object-fit:cover}
-  #hero .hero-inner{padding:30px 20px 38px}
-  .hero-panel{position:relative;overflow:hidden;background:var(--card);color:var(--ink);
-    border:1px solid var(--gold);outline:1px solid var(--line);outline-offset:5px;
-    padding:42px 26px 44px;text-align:center}
-  .hero-panel>*{position:relative;z-index:1}
-  .hero-panel>.hero-watermark{position:absolute;z-index:0;right:-58px;bottom:-64px;
-    width:250px;height:250px;border-radius:50%;object-fit:cover;opacity:.07;pointer-events:none}
+  #hero{position:relative;background:var(--green-deep);color:#FAF8F3;overflow:hidden}
+  .hero-bg{position:absolute;inset:0}
+  .hero-bg img{width:100%;height:100%;object-fit:cover;display:block}
+  .hero-scrim{position:absolute;inset:0;background:var(--green-deep);opacity:.74}
+  .hero-watermark{position:absolute;right:-70px;bottom:-84px;width:300px;height:300px;
+    border-radius:50%;object-fit:cover;opacity:.08;pointer-events:none}
+  #hero .hero-inner{position:relative;padding:58px 20px 66px;text-align:center}
   .hero-medallion{width:104px;height:104px;border-radius:50%;border:1px solid var(--gold);
     outline:1px solid var(--line);outline-offset:5px;margin:0 auto 24px;padding:4px;
     background:var(--cream)}
   .hero-medallion img{width:100%;height:100%;border-radius:50%;object-fit:cover;
     display:block;background:#fff}
-  #hero h1{font-size:42px;font-weight:600;line-height:1.1;margin:0 0 10px}
+  #hero h1{font-size:clamp(44px,6.5vw,68px);font-weight:600;line-height:1.05;margin:0 0 10px}
   .hero-rule{width:54px;border-top:1px solid var(--gold);margin:14px auto 20px}
   #hero .town{font-size:13px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
-    color:var(--muted);margin:0 0 4px}
+    color:#FAF8F3;opacity:.75;margin:0 0 4px}
   #hero .herotime{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;
-    font-size:20px;margin:0;white-space:pre-wrap}
+    font-size:22px;margin:0;white-space:pre-wrap}
   #hero .hero-actions{margin-top:24px;display:flex;flex-wrap:wrap;gap:14px;
     align-items:center;justify-content:center}
   #hero .btn{background:var(--gold);color:#241105;border-color:var(--gold)}
   #hero .btn:hover{background:var(--gold);color:#241105}
-  #hero a.textlink{color:var(--green);font-size:16px}
-  html[data-theme="dark"] #hero a.textlink{color:var(--gold)}
+  #hero a.textlink{color:var(--gold);font-size:16px}
 
-  main.wrap{padding-top:8px;padding-bottom:56px}
-  section.block{padding:26px 0 6px;border-top:1px solid var(--line)}
-  section.block:first-child{border-top:none}
-  /* section headings are labels: letterspaced small caps with a
-     hairline running to the edge. Gold only where it can be read
-     (dark palettes); the deep brand tone carries light ones. */
-  section.block>h2{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  /* the page below the hero is rooms, not a list (v5): full-width
+     bands alternate the page background with the surface tone so
+     each block reads as a place; on wide screens two pairs —
+     Visit beside Welcome, Give beside the app card — share a
+     row, and a section left alone in its pair takes the whole
+     row (the renderer marks the pair .solo). Phones keep the
+     single stack, in the same order. */
+  main{padding-bottom:56px}
+  .in{max-width:1080px;margin:0 auto;padding:0 20px}
+  section.block{padding:32px 0 38px;border-top:1px solid var(--line)}
+  section.band{background:var(--card);border-top:none}
+  .pair{max-width:1080px;margin:0 auto;padding:0 20px}
+  .pair>section.block{border-top:1px solid var(--line)}
+  .pair>section.block:first-child{border-top:none}
+  @media (min-width:900px){
+    .pair{display:grid;grid-template-columns:1fr 1fr;gap:8px 48px;align-items:start}
+    .pair>section.block{border-top:none}
+    .pair.solo>section.block{grid-column:1/-1}
+  }
+  /* section headings come in two voices (v5): a letterspaced
+     small-cap label with a hairline — kept on a minority of
+     sections — and a display heading in the serif, with no
+     hairline, for the rest. Gold labels only where they can be
+     read (dark palettes); the deep brand tone carries light
+     ones. Display headings always take the text colour. */
+  section.block>.in>h2, .pair>section.block>h2{
+    font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
     font-size:13px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;
     color:var(--green-deep);margin:0 0 18px;display:flex;align-items:center;gap:14px}
-  section.block>h2::after{content:"";flex:1;border-top:1px solid var(--line)}
-  html[data-theme="dark"] section.block>h2{color:var(--gold)}
-  .times{white-space:pre-wrap;font-size:17px}
-  /* the visit block is a card, its address set in display type */
+  section.block>.in>h2::after, .pair>section.block>h2::after{
+    content:"";flex:1;border-top:1px solid var(--line)}
+  html[data-theme="dark"] section.block>.in>h2, html[data-theme="dark"] .pair>section.block>h2{color:var(--gold)}
+  section.block>.in>h2.display-h, .pair>section.block>h2.display-h{
+    font-family:"Cormorant Garamond",Georgia,serif;font-size:31px;font-weight:600;
+    letter-spacing:0;text-transform:none;color:var(--ink);display:block;margin:0 0 16px}
+  section.block>.in>h2.display-h::after, .pair>section.block>h2.display-h::after{content:none}
+  html[data-theme="dark"] section.block>.in>h2.display-h, html[data-theme="dark"] .pair>section.block>h2.display-h{color:var(--ink)}
+  /* the visit block is a card; its service times are the biggest
+     type on the page after the church's name (v5), and its
+     address is set in display type beneath them */
   #visit-view{background:var(--card);border:1px solid var(--line);
     border-top:2px solid var(--green);padding:24px 22px}
+  #visit .times{font-family:"Cormorant Garamond",Georgia,serif;
+    font-size:clamp(27px,4.2vw,36px);font-weight:600;line-height:1.22;white-space:pre-wrap}
   .addr{white-space:pre-wrap;margin:10px 0 0}
   #visit .addr{font-family:"Cormorant Garamond",Georgia,serif;font-size:29px;
     font-weight:600;line-height:1.2}
@@ -144,10 +176,11 @@
   .appcard .code{font-size:clamp(20px,6vw,27px);font-weight:700;letter-spacing:.08em;
     color:var(--green);font-family:"Cormorant Garamond",Georgia,serif;display:block;
     margin:6px 0 2px;max-width:100%;overflow-wrap:anywhere}
-  .closing{padding:26px 0 2px;border-top:1px solid var(--line);text-align:center}
+  .closing{padding:30px 0 6px;border-top:1px solid var(--line);text-align:center}
   .closing .crule{width:54px;border-top:1px solid var(--gold);margin:0 auto 20px}
   .closing p{font-family:"Cormorant Garamond",Georgia,serif;font-size:21px;margin:0 0 14px}
-  footer.foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
+  footer.foot{max-width:1080px;margin:44px auto 0;padding:18px 20px 0;
+    border-top:1px solid var(--line);
     font-size:14px;color:var(--muted);text-align:center}
   footer.foot .fbrand{color:var(--ink);font-family:"Cormorant Garamond",Georgia,serif;
     font-size:17px;font-weight:600}
@@ -186,8 +219,10 @@
   .photo-strip button,.hero-photo-btns button{font:inherit;font-size:14px;cursor:pointer;
     background:var(--card);color:var(--green);border:1px solid var(--green);
     border-radius:8px;padding:6px 12px;min-height:40px}
-  .hero-photo-btns{display:flex;gap:8px;padding:10px 20px 0;max-width:780px;margin:0 auto}
-  @media (max-width:560px){ #hero h1{font-size:32px} }
+  .hero-photo-btns{position:relative;display:flex;gap:8px;padding:14px 20px 0;max-width:1080px;margin:0 auto}
+  @media (max-width:560px){
+    #hero .hero-inner{padding:44px 20px 50px}
+  }
 </style>
 </head>
 <body>
@@ -228,115 +263,132 @@
     </header>
 
     <section id="hero">
-      <img id="hero-photo" class="hero-photo hidden" alt="">
+      <div class="hero-bg hidden" id="hero-bg" aria-hidden="true">
+        <img id="hero-photo" alt="">
+        <div class="hero-scrim"></div>
+      </div>
+      <img id="hero-watermark" class="hero-watermark hidden" alt="" aria-hidden="true">
       <div class="hero-photo-btns hidden" id="hero-photo-btns">
         <button type="button" id="photo-replace">Replace photo</button>
         <button type="button" id="photo-remove">Remove photo</button>
         <input type="file" id="photo-replace-file" accept="image/*" class="hidden">
       </div>
       <div class="wrap hero-inner">
-        <div class="hero-panel">
-          <img id="hero-watermark" class="hero-watermark hidden" alt="" aria-hidden="true">
-          <div class="hero-medallion hidden" id="hero-medallion"><img id="hero-medallion-img" class="hidden" alt=""></div>
-          <h1 id="site-name">Church</h1>
-          <div class="hero-rule" aria-hidden="true"></div>
-          <p class="town hidden" id="hero-town"></p>
-          <p class="herotime hidden" id="hero-time"></p>
-          <div class="hero-actions">
-            <a class="btn" href="#visit">Plan your visit</a>
-            <a class="textlink hidden" id="hero-sermon" href="#sec-sermons">Listen to a recent sermon</a>
-          </div>
+        <div class="hero-medallion hidden" id="hero-medallion"><img id="hero-medallion-img" class="hidden" alt=""></div>
+        <h1 id="site-name">Church</h1>
+        <div class="hero-rule" aria-hidden="true"></div>
+        <p class="town hidden" id="hero-town"></p>
+        <p class="herotime hidden" id="hero-time"></p>
+        <div class="hero-actions">
+          <a class="btn" href="#visit">Plan your visit</a>
+          <a class="textlink hidden" id="hero-sermon" href="#sec-sermons">Listen to a recent sermon</a>
         </div>
       </div>
     </section>
 
-    <main class="wrap">
-      <section class="block" id="visit">
-        <h2>Service times</h2>
-        <div id="visit-view">
-          <div class="times" id="site-times"></div>
-          <p class="addr" id="site-address"></p>
-          <p style="margin:16px 0 0"><a class="btn hidden" id="directions" href="#" target="_blank" rel="noopener">Get directions</a></p>
-        </div>
-        <div class="edit-fields hidden" id="visit-edit">
-          <label for="ed-times">Service times</label>
-          <textarea id="ed-times" placeholder="One per line"></textarea>
-          <label for="ed-address">Address</label>
-          <textarea id="ed-address" style="min-height:56px"></textarea>
-        </div>
-      </section>
+    <main>
+      <div class="pair" id="pair-visit">
+        <section class="block" id="visit">
+          <h2 class="display-h" id="visit-heading">Service times</h2>
+          <div id="visit-view">
+            <div class="times" id="site-times"></div>
+            <p class="addr" id="site-address"></p>
+            <p style="margin:16px 0 0"><a class="btn hidden" id="directions" href="#" target="_blank" rel="noopener">Get directions</a></p>
+          </div>
+          <div class="edit-fields hidden" id="visit-edit">
+            <label for="ed-times">Service times</label>
+            <textarea id="ed-times" placeholder="One per line"></textarea>
+            <label for="ed-address">Address</label>
+            <textarea id="ed-address" style="min-height:56px"></textarea>
+          </div>
+        </section>
 
-      <section class="block hidden" id="sec-welcome">
-        <div class="welcome" id="site-welcome"></div>
-        <div class="edit-fields hidden" id="welcome-edit">
-          <p class="edit-note hidden" id="welcome-empty-note">No welcome text yet. Write it in your church&rsquo;s own words:</p>
-          <label for="ed-welcome">Welcome text</label>
-          <textarea id="ed-welcome"></textarea>
-        </div>
-      </section>
+        <section class="block hidden" id="sec-welcome">
+          <div class="welcome" id="site-welcome"></div>
+          <div class="edit-fields hidden" id="welcome-edit">
+            <p class="edit-note hidden" id="welcome-empty-note">No welcome text yet. Write it in your church&rsquo;s own words:</p>
+            <label for="ed-welcome">Welcome text</label>
+            <textarea id="ed-welcome"></textarea>
+          </div>
+        </section>
+      </div>
 
-      <section class="block hidden" id="sec-news">
-        <h2>Announcements</h2>
-        <div id="site-news"></div>
+      <section class="block band hidden" id="sec-news">
+        <div class="in">
+          <h2>Announcements</h2>
+          <div id="site-news"></div>
+        </div>
       </section>
 
       <section class="block hidden" id="sec-ministries">
-        <h2>Ministries</h2>
-        <div id="site-ministries"></div>
-        <p class="viewall hidden" id="ministries-all-wrap"><a id="ministries-all" href="#">All ministries</a></p>
-        <div class="edit-fields hidden" id="ministries-edit">
-          <p class="edit-note">Name the ministry, when it meets, and a sentence in your own words &mdash; everything else is optional.</p>
-          <div id="ministries-edit-list"></div>
-          <p style="margin:12px 0 0"><button type="button" class="btn small" id="ministry-add">Add a ministry</button></p>
+        <div class="in">
+          <h2>Ministries</h2>
+          <div id="site-ministries"></div>
+          <p class="viewall hidden" id="ministries-all-wrap"><a id="ministries-all" href="#">All ministries</a></p>
+          <div class="edit-fields hidden" id="ministries-edit">
+            <p class="edit-note">Name the ministry, when it meets, and a sentence in your own words &mdash; everything else is optional.</p>
+            <div id="ministries-edit-list"></div>
+            <p style="margin:12px 0 0"><button type="button" class="btn small" id="ministry-add">Add a ministry</button></p>
+          </div>
         </div>
       </section>
 
-      <section class="block hidden" id="sec-events">
-        <h2>Upcoming events</h2>
-        <div id="site-events"></div>
-        <p class="viewall"><a id="events-all" href="#">All events</a></p>
+      <section class="block band hidden" id="sec-events">
+        <div class="in">
+          <h2 class="display-h">Upcoming events</h2>
+          <div id="site-events"></div>
+          <p class="viewall"><a id="events-all" href="#">All events</a></p>
+        </div>
       </section>
 
       <section class="block hidden" id="sec-sermons">
-        <h2>Recent sermons</h2>
-        <div id="sermon-featured"></div>
-        <div id="site-sermons"></div>
-        <p class="viewall"><a id="sermons-all" href="#">All sermons</a></p>
-      </section>
-
-      <section class="block hidden" id="sec-give">
-        <h2>Give</h2>
-        <p style="margin:0"><a class="btn" id="site-give-link" href="#" target="_blank" rel="noopener">Give online</a> <a class="btn hidden" id="site-give-canadahelps" href="#" target="_blank" rel="noopener">Give through CanadaHelps</a></p>
-        <div class="edit-fields hidden" id="give-edit">
-          <label for="ed-giving">Giving link</label>
-          <input id="ed-giving" type="url" placeholder="https://">
+        <div class="in">
+          <h2 class="display-h">Recent sermons</h2>
+          <div id="sermon-featured"></div>
+          <div id="site-sermons"></div>
+          <p class="viewall"><a id="sermons-all" href="#">All sermons</a></p>
         </div>
       </section>
 
-      <section class="block hidden" id="sec-photos-edit">
-        <h2>Church photos</h2>
-        <div class="photo-strip" id="photo-strip"></div>
-        <p style="margin:14px 0 0" id="photo-add-row">
-          <input type="file" id="photo-add-file" accept="image/*">
-          <button type="button" class="btn small" id="photo-add">Add photo</button>
-        </p>
-        <p class="edit-note hidden" id="photo-cap-note" style="margin-top:14px">Your page shows up to 4 photos &mdash; remove one to add another.</p>
-        <p class="edit-note" style="margin-top:12px">The first photo is the banner across the top of this page.</p>
-      </section>
+      <div class="pair" id="pair-give">
+        <section class="block hidden" id="sec-give">
+          <h2 class="display-h">Give</h2>
+          <p style="margin:0"><a class="btn" id="site-give-link" href="#" target="_blank" rel="noopener">Give online</a> <a class="btn hidden" id="site-give-canadahelps" href="#" target="_blank" rel="noopener">Give through CanadaHelps</a></p>
+          <div class="edit-fields hidden" id="give-edit">
+            <label for="ed-giving">Giving link</label>
+            <input id="ed-giving" type="url" placeholder="https://">
+          </div>
+        </section>
 
-      <section class="block hidden" id="sec-app">
-        <div class="appcard">
-          <h2>Join us in the app</h2>
-          <p style="margin:0">The whole church lives in the Your People app &mdash; the directory, the calendar, prayer and sermons. Get the app, tap Join, and use this code:</p>
-          <span class="code" id="site-code"></span>
-          <p style="margin:0;color:var(--muted);font-size:14.5px">Free for every member. Your leaders can help you get set up.</p>
+        <section class="block hidden" id="sec-app">
+          <div class="appcard">
+            <h2>Join us in the app</h2>
+            <p style="margin:0">The whole church lives in the Your People app &mdash; the directory, the calendar, prayer and sermons. Get the app, tap Join, and use this code:</p>
+            <span class="code" id="site-code"></span>
+            <p style="margin:0;color:var(--muted);font-size:14.5px">Free for every member. Your leaders can help you get set up.</p>
+          </div>
+        </section>
+      </div>
+
+      <section class="block hidden" id="sec-photos-edit">
+        <div class="in">
+          <h2>Church photos</h2>
+          <div class="photo-strip" id="photo-strip"></div>
+          <p style="margin:14px 0 0" id="photo-add-row">
+            <input type="file" id="photo-add-file" accept="image/*">
+            <button type="button" class="btn small" id="photo-add">Add photo</button>
+          </p>
+          <p class="edit-note hidden" id="photo-cap-note" style="margin-top:14px">Your page shows up to 4 photos &mdash; remove one to add another.</p>
+          <p class="edit-note" style="margin-top:12px">The first photo is the banner across the top of this page.</p>
         </div>
       </section>
 
       <section class="closing hidden" id="sec-closing">
-        <div class="crule" aria-hidden="true"></div>
-        <p id="closing-text"></p>
-        <a class="btn hidden" id="closing-directions" href="#" target="_blank" rel="noopener">Get directions</a>
+        <div class="in">
+          <div class="crule" aria-hidden="true"></div>
+          <p id="closing-text"></p>
+          <a class="btn hidden" id="closing-directions" href="#" target="_blank" rel="noopener">Get directions</a>
+        </div>
       </section>
 
       <footer class="foot">
@@ -362,6 +414,6 @@
      ?v= on the script tag is bumped whenever the renderer
      changes, so a just-updated page is never masked by a
      browser's cached copy of the previous renderer. -->
-<script src="/site/church-site.js?v=6"></script>
+<script src="/site/church-site.js?v=7"></script>
 </body>
 </html>

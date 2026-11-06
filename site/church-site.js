@@ -46,6 +46,21 @@
    (settings.site.linkedYouthCode, served as linkedYouthCode),
    the footer quietly links to that group's page on Your Youth.
 
+   v5 (the de-listed pass): the page below the header is rooms,
+   not a list. The hero is a full-bleed band — the deep brand
+   tone wall to wall, the church's name in display type directly
+   on it; a saved photo (the first, as always) becomes the
+   backdrop under a FLAT scrim of the deep tone, never a
+   gradient. Sections alternate the page background with the
+   surface tone in full-width bands, headings come in two voices
+   (the small-cap label with its hairline survives on a minority;
+   the rest take a serif display heading), and on wide screens
+   two pairs share a row — Visit beside the Welcome, Give beside
+   the app card — with a lone section taking the whole row (the
+   .solo mark below). The Visit heading follows the block's own
+   contents: "Service times" only when times are actually set,
+   never as a label over a bare address.
+
    Edit-in-place: a signed-in LEADER of this church (the desk
    session carries over — same origin) gets a discreet edit bar
    and can change the welcome, service times, address, giving link
@@ -235,10 +250,12 @@ function render(data) {
   if (headGiveUrl) hg.href = headGiveUrl;
 
   // the hero carries the same mark large: a gold-ringed
-  // medallion, and the logo again faint behind the words. No
-  // logo — no medallion; the typographic panel stands alone.
+  // medallion, and the logo again faint behind the words as a
+  // watermark — unless a photo leads, when the watermark steps
+  // aside (decided with the hero below). No logo — no medallion
+  // and no watermark; the typographic band stands alone.
   const medal = $('hero-medallion'), medalImg = $('hero-medallion-img'), wm = $('hero-watermark');
-  for (const el of [medal, medalImg, wm]) el.classList.toggle('hidden', !data.logoUrl);
+  for (const el of [medal, medalImg]) el.classList.toggle('hidden', !data.logoUrl);
   if (data.logoUrl) {
     medalImg.src = data.logoUrl;
     wm.src = data.logoUrl;
@@ -261,18 +278,29 @@ function render(data) {
   $('hero-time').textContent = mainTime;
   $('hero-time').classList.toggle('hidden', !mainTime);
   const photos = Array.isArray(data.photos) ? data.photos : [];
-  const heroImg = $('hero-photo');
-  heroImg.classList.toggle('hidden', photos.length === 0);
+  const hero = $('hero'), heroBg = $('hero-bg'), heroImg = $('hero-photo');
+  hero.classList.toggle('has-photo', photos.length > 0);
+  heroBg.classList.toggle('hidden', photos.length === 0);
+  wm.classList.toggle('hidden', !data.logoUrl || photos.length > 0);
   if (photos.length > 0) {
     heroImg.src = photos[0];
     heroImg.alt = data.name;
-    heroImg.addEventListener('error', () => heroImg.classList.add('hidden'));
+    heroImg.addEventListener('error', () => {
+      heroBg.classList.add('hidden');
+      hero.classList.remove('has-photo');
+      wm.classList.toggle('hidden', !data.logoUrl);
+    });
   }
   const sermons = Array.isArray(data.sermons) ? data.sermons : [];
   $('hero-sermon').classList.toggle('hidden', sermons.length === 0);
 
   // visit — never hides: at minimum the name of the gathering
   // place is here, with times / address / directions as supplied.
+  // The heading follows the contents (v5): "Service times" only
+  // when the church has actually set times — a bare address
+  // under that label misleads, so it heads as "Find us" instead.
+  const hasTimes = !!(data.serviceTimes && String(data.serviceTimes).trim());
+  $('visit-heading').textContent = hasTimes ? 'Service times' : 'Find us';
   $('site-times').textContent = data.serviceTimes || '';
   $('site-address').textContent = data.address || '';
   for (const id of ['directions', 'closing-directions']) {
@@ -397,6 +425,13 @@ function render(data) {
   $('sec-app').classList.toggle('hidden', !data.joinCode);
   if (data.joinCode) $('site-code').textContent = data.joinCode;
 
+  // the two-up pairs (v5): on wide screens each pair shares a
+  // row; a pair with only one section showing is marked .solo
+  // so that section takes the whole row instead of a half.
+  $('pair-visit').classList.toggle('solo', !data.welcome);
+  const giveShown = !!(data.givingUrl || chUrl);
+  $('pair-give').classList.toggle('solo', giveShown !== !!data.joinCode);
+
   // closing strip — the same facts restated, no new words.
   $('sec-closing').classList.toggle('hidden', !(data.serviceTimes || data.address));
   if (data.serviceTimes || data.address) {
@@ -503,7 +538,7 @@ function setVisitorParam(on) {
   } catch (e) { /* the mode still holds for this view */ }
 }
 function enterVisitorMode() {
-  if (PAGE.editing) exitEdit();
+  if (PAGE.editing) { exitEdit(); render(PAGE.data); }
   PAGE.visitor = true;
   $('editbar').classList.add('hidden');
   const strip = $('visitorstrip');
@@ -657,6 +692,11 @@ function enterEdit() {
   const data = PAGE.data;
   if (!data) return;
   PAGE.editing = true;
+  // editing shows both halves of each pair (the welcome and
+  // give editors exist even when their sections are publicly
+  // hidden), so neither pair stays marked solo.
+  $('pair-visit').classList.remove('solo');
+  $('pair-give').classList.remove('solo');
   document.body.classList.add('editing');
   $('ed-welcome').value = data.welcome || '';
   $('ed-times').value = data.serviceTimes || '';
@@ -898,6 +938,20 @@ function renderPhotoStrip() {
 function safeName(name) {
   return (name || 'photo').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-60);
 }
+/* The hero backdrop follows the first photo in the list: the
+   backdrop shows when one exists, the watermark returns when
+   none does. Used by every photo change in edit mode. */
+function syncHeroPhoto() {
+  const first = PAGE.photoPaths[0];
+  const has = !!first;
+  $('hero').classList.toggle('has-photo', has);
+  $('hero-bg').classList.toggle('hidden', !has);
+  if (has) {
+    $('hero-photo').src = PHOTO_PREFIX + first;
+    $('hero-photo').alt = PAGE.data.name;
+  }
+  $('hero-watermark').classList.toggle('hidden', !PAGE.data.logoUrl || has);
+}
 async function uploadPhoto(file) {
   const prepared = await prepareSitePhoto(file);
   const path = PAGE.data.groupId + '/' + Date.now() + '-' + safeName(prepared.name);
@@ -928,15 +982,14 @@ async function addPhoto() {
   if (!path) { barMsg('That photo did not upload. Check your connection and try again.', 'err'); return; }
   input.value = '';
   PAGE.photoPaths.push(path);
+  syncHeroPhoto();
   await persistPhotos('Photo added — saved.');
 }
 async function removePhoto(path) {
   if (!window.confirm('Remove this photo from your church site?')) return;
   try { await PAGE.client.storage.from('church-site-photos').remove([path]); } catch (e) { /* list first */ }
   PAGE.photoPaths = PAGE.photoPaths.filter((p) => p !== path);
-  const hero = $('hero-photo');
-  if (PAGE.photoPaths.length === 0) hero.classList.add('hidden');
-  else hero.src = PHOTO_PREFIX + PAGE.photoPaths[0];
+  syncHeroPhoto();
   await persistPhotos('Photo removed — saved.');
 }
 async function replaceHeroPhoto() {
@@ -949,8 +1002,7 @@ async function replaceHeroPhoto() {
   const old = PAGE.photoPaths[0];
   PAGE.photoPaths[0] = path;
   input.value = '';
-  $('hero-photo').src = PHOTO_PREFIX + path;
-  $('hero-photo').classList.remove('hidden');
+  syncHeroPhoto();
   await persistPhotos('Banner photo replaced — saved.');
   if (old && old !== path) {
     try { await PAGE.client.storage.from('church-site-photos').remove([old]); } catch (e) { /* best effort */ }
