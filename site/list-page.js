@@ -238,8 +238,9 @@ async function load() {
   $('home-link').href = look.home;
   $('back-link').href = look.home;
   const hg = $('head-give');
-  hg.classList.toggle('hidden', !data.givingUrl);
-  if (data.givingUrl) hg.href = data.givingUrl;
+  const headGiveUrl = data.givingUrl || data.canadaHelpsUrl;
+  hg.classList.toggle('hidden', !headGiveUrl);
+  if (headGiveUrl) hg.href = headGiveUrl;
   $('foot-name').textContent = data.name;
   $('foot-name-2').textContent = data.name;
 

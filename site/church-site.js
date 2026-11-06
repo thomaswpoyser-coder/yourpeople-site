@@ -230,8 +230,9 @@ function render(data) {
     img.addEventListener('error', () => img.classList.add('hidden'));
   }
   const hg = $('head-give');
-  hg.classList.toggle('hidden', !data.givingUrl);
-  if (data.givingUrl) hg.href = data.givingUrl;
+  const headGiveUrl = data.givingUrl || data.canadaHelpsUrl;
+  hg.classList.toggle('hidden', !headGiveUrl);
+  if (headGiveUrl) hg.href = headGiveUrl;
 
   // the hero carries the same mark large: a gold-ringed
   // medallion, and the logo again faint behind the words. No
@@ -378,9 +379,19 @@ function render(data) {
     }
   }
 
-  // give — a link, nothing more; hides without one.
-  $('sec-give').classList.toggle('hidden', !data.givingUrl);
+  // give — a link, nothing more; hides without one. Two links
+  // (Tithely + CanadaHelps, Nov 6, 2026) show two buttons; a
+  // CanadaHelps link stored in the legacy single field arrives
+  // as both payload keys pointing at the same URL and still
+  // shows the one button it always did.
+  const chUrl =
+    data.canadaHelpsUrl && data.canadaHelpsUrl !== data.givingUrl ? data.canadaHelpsUrl : '';
+  $('sec-give').classList.toggle('hidden', !(data.givingUrl || chUrl));
+  $('site-give-link').classList.toggle('hidden', !data.givingUrl);
   if (data.givingUrl) $('site-give-link').href = data.givingUrl;
+  const chBtn = $('site-give-canadahelps');
+  chBtn.classList.toggle('hidden', !chUrl);
+  if (chUrl) chBtn.href = chUrl;
 
   // the app card — a member call, late on the page.
   $('sec-app').classList.toggle('hidden', !data.joinCode);

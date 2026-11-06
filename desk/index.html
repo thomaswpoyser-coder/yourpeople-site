@@ -459,9 +459,12 @@
           <textarea id="site-times" rows="3" maxlength="1000" placeholder="One per line, e.g. Sunday worship &mdash; 10:30 am"></textarea>
           <label for="site-address">Address</label>
           <input type="text" id="site-address" maxlength="300" placeholder="e.g. 123 Main Street, Centreville">
-          <label for="site-giving">Giving link</label>
+          <label for="site-giving">Giving link (Tithely)</label>
           <input type="text" id="site-giving" maxlength="500" placeholder="https://&hellip;">
           <p class="hint">Your church&rsquo;s own giving page. The same link powers the Give button in the app.</p>
+          <label for="site-giving-canadahelps">Giving link (CanadaHelps)</label>
+          <input type="text" id="site-giving-canadahelps" maxlength="500" placeholder="https://&hellip;">
+          <p class="hint">If your church also takes gifts through CanadaHelps, add that page too &mdash; your site and the app show a button for each. Leave it empty if you don&rsquo;t use CanadaHelps.</p>
           <label for="site-youth-code">Youth group join code</label>
           <input type="text" id="site-youth-code" maxlength="40" placeholder="e.g. SOULFIREYOUT" autocapitalize="characters" autocomplete="off" spellcheck="false">
           <p class="hint">Links your public page to your youth group&rsquo;s page &mdash; if your youth group is on Your Youth, type its join code and your church site footer gains a quiet link to it. Leave it empty if you don&rsquo;t have one.</p>
@@ -1984,6 +1987,7 @@ async function loadSiteSettings() {
   $('site-times').value = typeof site.serviceTimes === 'string' ? site.serviceTimes : '';
   $('site-address').value = typeof site.address === 'string' ? site.address : '';
   $('site-giving').value = typeof S.settings.tithelyUrl === 'string' ? S.settings.tithelyUrl : '';
+  $('site-giving-canadahelps').value = typeof S.settings.canadaHelpsUrl === 'string' ? S.settings.canadaHelpsUrl : '';
   $('site-youth-code').value = typeof site.linkedYouthCode === 'string' ? site.linkedYouthCode : '';
   S.siteMinistries = (Array.isArray(site.ministries) ? site.ministries : [])
     .filter((m) => m && typeof m === 'object')
@@ -2008,7 +2012,7 @@ async function saveSiteSettings(successText) {
   site.linkedYouthCode = $('site-youth-code').value.trim().toUpperCase();
   site.ministries = siteMinistriesClean(S.siteMinistries);
   site.photos = [...S.sitePhotos].slice(0, SITE_PHOTO_MAX);
-  const next = { ...S.settings, site, tithelyUrl: $('site-giving').value.trim() };
+  const next = { ...S.settings, site, tithelyUrl: $('site-giving').value.trim(), canadaHelpsUrl: $('site-giving-canadahelps').value.trim() };
   const { error } = await client.from('groups').update({ settings: next }).eq('id', S.groupId);
   if (error) {
     setMsg('site-msg', 'Those details did not save. Check your connection and try again.', 'err');
@@ -2106,6 +2110,11 @@ $('site-form').addEventListener('submit', async (ev) => {
   const giving = $('site-giving').value.trim();
   if (giving && !/^https:\/\//i.test(giving)) {
     setMsg('site-msg', 'The giving link needs to start with https:// — copy the full address of your giving page.', 'err');
+    return;
+  }
+  const givingCh = $('site-giving-canadahelps').value.trim();
+  if (givingCh && !/^https:\/\//i.test(givingCh)) {
+    setMsg('site-msg', 'The CanadaHelps link needs to start with https:// — copy the full address of your CanadaHelps page.', 'err');
     return;
   }
   $('site-save').disabled = true;
