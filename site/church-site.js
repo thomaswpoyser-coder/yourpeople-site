@@ -76,6 +76,22 @@
    presence of a display quote — the words still exactly the
    church's own, nothing added.
 
+   v5.2 (the shared hero rule — the same fix the youth page
+   took): a hero never repeats the section below it, and no
+   hero button anchors to the immediately following section.
+   The v5.1 "Plan your visit" button is therefore gone: real
+   as its action was, it duplicated the Visit card's own Get
+   directions one screen below it. The hero now carries only
+   the church's name, its mark, the service-times first line
+   and the photo backdrop — and no address text at all, not
+   even the town the hero used to lift out of the address.
+   The address and the directions action live exactly once,
+   in the Visit card — so the closing strip and the footer
+   line, which each used to restate the address's first line
+   (the footer under the town as well, the strip under a
+   second Get directions button), now carry the name and the
+   main service time alone.
+
    Edit-in-place: a signed-in LEADER of this church (the desk
    session carries over — same origin) gets a discreet edit bar
    and can change the welcome, service times, address, giving link
@@ -155,23 +171,6 @@ function fmtDay(iso) {
 }
 function firstLine(text) {
   return (text || '').split('\n').map((s) => s.trim()).filter(Boolean)[0] || '';
-}
-/* The town is part of the address the church supplied — read it
-   back out of the address's own lines; never guessed. */
-function townFromAddress(address) {
-  const line = firstLine(address);
-  if (!line) return '';
-  const parts = line.split(',').map((s) => s.trim()).filter(Boolean);
-  if (parts.length >= 3) {
-    return parts[parts.length - 2].replace(/\s+[A-Z]{2}\b.*$/, '').trim();
-  }
-  if (parts.length === 2) {
-    return parts[1]
-      .replace(/\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/gi, '')
-      .replace(/\s+(NS|NB|PE|NL|QC|ON|MB|SK|AB|BC|YT|NT|NU)\b.*$/i, '')
-      .trim();
-  }
-  return '';
 }
 function directionsUrl(data) {
   const q = (data.name + ' ' + (data.address || '')).trim();
@@ -283,12 +282,13 @@ function render(data) {
   const look = resolveLookup();
   const pageUrl = (page) => '/site/' + page + (look ? '?' + look.query : '');
 
-  // hero — name, town, main service time; one photo if there is
-  // one, used once. No photo: the flat typographic variant.
+  // hero — name and the main service time's first line; one
+  // photo if there is one, used once. No photo: the flat
+  // typographic variant. The address is NOT repeated here —
+  // not the street, not even its town: it lives once, in the
+  // Visit card directly below, with the directions button
+  // (the shared hero rule, v5.2 — see the header note).
   $('site-name').textContent = data.name;
-  const town = townFromAddress(data.address);
-  $('hero-town').textContent = town;
-  $('hero-town').classList.toggle('hidden', !town);
   const mainTime = firstLine(data.serviceTimes);
   $('hero-time').textContent = mainTime;
   $('hero-time').classList.toggle('hidden', !mainTime);
@@ -309,14 +309,6 @@ function render(data) {
   const sermons = Array.isArray(data.sermons) ? data.sermons : [];
   $('hero-sermon').classList.toggle('hidden', sermons.length === 0);
 
-  // "Plan your visit" does something real (v5.1): directions to
-  // the church's address — the same URL the Visit block's own
-  // Get directions opens. No address saved: nothing to plan
-  // with, so the button hides.
-  const planBtn = $('hero-plan');
-  planBtn.classList.toggle('hidden', !data.address);
-  if (data.address) planBtn.href = directionsUrl(data);
-
   // visit — never hides: at minimum the name of the gathering
   // place is here, with times / address / directions as supplied.
   // The heading follows the contents (v5): "Service times" only
@@ -326,11 +318,9 @@ function render(data) {
   $('visit-heading').textContent = hasTimes ? 'Service times' : 'Find us';
   $('site-times').textContent = data.serviceTimes || '';
   $('site-address').textContent = data.address || '';
-  for (const id of ['directions', 'closing-directions']) {
-    const a = $(id);
-    a.classList.toggle('hidden', !data.address);
-    if (data.address) a.href = directionsUrl(data);
-  }
+  const dirBtn = $('directions');
+  dirBtn.classList.toggle('hidden', !data.address);
+  if (data.address) dirBtn.href = directionsUrl(data);
 
   // welcome — the church's own words, exactly; hides when empty.
   $('site-welcome').textContent = data.welcome || '';
@@ -461,13 +451,13 @@ function render(data) {
   const giveShown = !!(data.givingUrl || chUrl);
   $('pair-give').classList.toggle('solo', giveShown !== !!data.joinCode);
 
-  // closing strip — the same facts restated, no new words.
-  $('sec-closing').classList.toggle('hidden', !(data.serviceTimes || data.address));
-  if (data.serviceTimes || data.address) {
-    const bits = [data.name];
-    if (mainTime) bits.push(mainTime);
-    if (data.address) bits.push(firstLine(data.address));
-    $('closing-text').textContent = bits.join(' — ');
+  // closing strip — the name and the main time restated, no
+  // new words. The address used to ride along here; as of
+  // v5.2 it lives exactly once on the page (the Visit card),
+  // so the strip closes on the time alone.
+  $('sec-closing').classList.toggle('hidden', !mainTime);
+  if (mainTime) {
+    $('closing-text').textContent = [data.name, mainTime].join(' — ');
   }
 
   // footer
@@ -480,9 +470,10 @@ function render(data) {
   if (youthCode) {
     $('youth-link').href = 'https://youryouth.org/site/?c=' + encodeURIComponent(youthCode);
   }
+  // the footer line used to restate the address's first line
+  // and its town; as of v5.2 the address lives once (the
+  // Visit card), so the line carries the main time alone.
   const fl = [];
-  if (data.address) fl.push(firstLine(data.address));
-  if (town) fl.push(town);
   if (mainTime) fl.push(mainTime);
   $('foot-line').textContent = fl.join(' · ') + (fl.length ? ' · ' : '') + '© ' + new Date().getFullYear() + ' ' + data.name;
 
