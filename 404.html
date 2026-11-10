@@ -188,6 +188,14 @@
     font-size:14px;color:var(--muted);text-align:center}
   footer.foot .fbrand{color:var(--ink);font-family:"Cormorant Garamond",Georgia,serif;
     font-size:17px;font-weight:600}
+  /* the church's own social links — a quiet row of small
+     marks + names, only the ones the church set (v6) */
+  footer.foot .socials{margin-top:14px;display:flex;gap:6px 20px;
+    justify-content:center;flex-wrap:wrap}
+  footer.foot .socials a{display:inline-flex;align-items:center;gap:7px;
+    color:var(--muted);text-decoration:none;font-size:13.5px;font-weight:600;min-height:32px}
+  footer.foot .socials a:hover{color:var(--ink)}
+  footer.foot .socials svg{width:17px;height:17px;flex:none}
 
   .center-card{max-width:520px;margin:10vh auto 0;background:var(--card);
     border:1px solid var(--line);border-radius:14px;padding:28px;text-align:center}
@@ -394,6 +402,7 @@
       <footer class="foot">
         <div class="fbrand" id="foot-name"></div>
         <div id="foot-line"></div>
+        <div id="foot-socials" class="socials hidden"></div>
         <p class="hidden" id="youth-link-wrap" style="margin:10px 0 0"><a id="youth-link" href="#" target="_blank" rel="noopener">Youth group</a></p>
         <div style="margin-top:10px">This page is <span id="foot-name-2"></span>&rsquo;s own, made with <a href="/">Your People</a>.</div>
       </footer>
@@ -465,6 +474,6 @@
   }, 8000);
 })();
 </script>
-<script src="/site/church-site.js?v=10"></script>
+<script src="/site/church-site.js?v=12"></script>
 </body>
 </html>

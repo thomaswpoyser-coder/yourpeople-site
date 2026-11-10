@@ -20,6 +20,11 @@
    the template supplies only bare functional labels, every
    sermon and event word is the church's own, and there are no
    gradients anywhere.
+
+   The footer carries the same quiet social row as the
+   homepage (Nov 10, 2026): the church's own links from the
+   payload's `socials`, shaped at the function door and
+   re-checked here, shown only when the church set them.
    ===================================================================== */
 const SUPABASE_URL = 'https://wsmqkhljjhaueahqizfr.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_4eoGwVeVNyN7jn-wmJsUkg_nShqdukt';
@@ -108,6 +113,52 @@ function applyBrand(brand) {
     root.style.setProperty('--line', mixHex(pal.background, pal.text, 0.16));
   }
   root.dataset.theme = brand.mode === 'dark' ? 'dark' : 'light';
+}
+
+/* The church's own social links — the homepage renderer's
+   helpers, twin for twin (same services, same marks, same
+   http(s)-only check), so a church's footer reads the same on
+   every one of its pages. The marks are this template's own
+   fixed strings; a URL rides in an href only after the check. */
+const SOCIAL_SERVICES = [
+  ['facebook', 'Facebook'],
+  ['instagram', 'Instagram'],
+  ['youtube', 'YouTube'],
+  ['x', 'X'],
+];
+const SOCIAL_SVGS = {
+  facebook: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+  instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.25"/><circle cx="17.55" cy="6.45" r="0.6" fill="currentColor" stroke="none"/></svg>',
+  youtube: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H4.68l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+};
+function cleanSocials(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const [key] of SOCIAL_SERVICES) {
+    const v = typeof raw[key] === 'string' ? raw[key].trim().slice(0, 500) : '';
+    if (/^https?:\/\//i.test(v)) out[key] = v;
+  }
+  return out;
+}
+function renderSocials(data) {
+  const box = $('foot-socials');
+  if (!box) return;
+  const socials = cleanSocials(data.socials);
+  box.replaceChildren();
+  for (const [key, label] of SOCIAL_SERVICES) {
+    const url = socials[key];
+    if (!url) continue;
+    const a = h('a', 'soc');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.setAttribute('aria-label', data.name + ' on ' + label);
+    a.innerHTML = SOCIAL_SVGS[key];
+    a.appendChild(h('span', null, label));
+    box.appendChild(a);
+  }
+  box.classList.toggle('hidden', box.children.length === 0);
 }
 
 function resolveLookup() {
@@ -243,6 +294,7 @@ async function load() {
   if (headGiveUrl) hg.href = headGiveUrl;
   $('foot-name').textContent = data.name;
   $('foot-name-2').textContent = data.name;
+  renderSocials(data);
 
   if (kind === 'sermons') renderSermons(data);
   else if (kind === 'events') renderEvents(data);
