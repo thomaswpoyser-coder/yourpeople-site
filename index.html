@@ -30,6 +30,13 @@
   .features li strong{color:var(--green-deep); font-weight:600;}
   .page-note{margin:40px auto 0; max-width:620px; background:#fff; border:1px solid #E4DFD2; border-radius:10px; padding:20px 22px; font-size:16px;}
   .page-note code{font-family:ui-monospace,Menlo,Consolas,monospace; background:var(--cream); padding:2px 6px; border-radius:5px; color:var(--green-deep);}
+  .policy{margin:56px auto 0; max-width:640px; text-align:left; font-family:Helvetica,Arial,sans-serif; font-size:15.5px;}
+  .policy h2{font-family:Georgia,'Times New Roman',serif; font-weight:normal; font-size:30px; color:var(--green-deep); text-align:center;}
+  .policy .updated{text-align:center; color:var(--muted); font-size:14px; margin:6px 0 18px;}
+  .policy h3{font-size:16px; color:var(--green-deep); margin:22px 0 6px;}
+  .policy p{margin:0 0 10px;}
+  .policy ul{margin:0 0 10px; padding-left:20px;}
+  .policy li{margin:5px 0;}
   footer{margin-top:54px; font-family:Helvetica,Arial,sans-serif; font-size:14px; color:var(--muted);}
   footer a{color:var(--green); text-decoration:none; border-bottom:1px solid var(--gold);}
 </style>
@@ -60,9 +67,53 @@
       <code>yourpeople.church/yourchurch</code> &mdash; with your service times, your welcome, and your way in. It builds itself from your church in the app; leaders shape it from the <a href="/desk/">church desk</a>.
     </div>
 
+    <section class="policy" id="privacy">
+      <h2>Privacy policy</h2>
+      <p class="updated">Last updated: November 11, 2026</p>
+
+      <p>Your People (&ldquo;we&rdquo;, &ldquo;the app&rdquo;) is a mobile app that gives a church congregation a private online home. This policy explains what information the app handles and why. Your People is made for adult members of a congregation; there are no accounts for children. If anything here is unclear, contact us at <a href="mailto:youth@cbckc.ca">youth@cbckc.ca</a>.</p>
+
+      <h3>What we collect</h3>
+      <ul>
+        <li><strong>Account details</strong> &mdash; name, email address, and password (stored securely by our authentication provider, never in plain text).</li>
+        <li><strong>Directory details</strong> &mdash; only if you choose to be listed in your church's directory: the details you add yourself, such as your name, a photo, an email address, or a phone number. Each detail carries your own choice of whether it is shown.</li>
+        <li><strong>Group content</strong> &mdash; group chat messages, direct messages, questions, prayer requests, events, announcements, and event RSVPs that members post in their churches.</li>
+        <li><strong>Sermons and lessons</strong> &mdash; the teaching text leaders save and post for their church.</li>
+        <li><strong>Church branding</strong> &mdash; a church's logo image, uploaded by its leader.</li>
+        <li><strong>Device details for notifications</strong> &mdash; a push notification token, if you turn notifications on.</li>
+      </ul>
+
+      <h3>How it's used</h3>
+      <p>Account and group information is used only to run the app: signing you in, showing your church its content, and delivering it to members. We do not sell personal information, and the app contains no advertising and no advertising trackers.</p>
+
+      <h3>The writing assistant</h3>
+      <p>Leaders have an optional assistant that helps draft and polish sermons and lessons. When a leader uses it, the text they enter is sent to Anthropic, our AI provider, to produce the suggestions. Text is sent only when the assistant is used.</p>
+
+      <h3>Who can see what</h3>
+      <ul>
+        <li>Group chat and announcements: members of that church only.</li>
+        <li>Direct messages: the two people in the conversation only. A church's leaders cannot read other members' direct messages.</li>
+        <li>The directory: members of your own church only, and only the details you choose to show. Your listing also carries your own choice of whether other members may start a message with you from it. The directory never appears on a public page.</li>
+        <li>Questions: you choose whether your question carries your name or is asked anonymously; either way, your church's leaders can see who asked, so they can follow up with care.</li>
+        <li>Prayer requests: shared the way you choose when you send one &mdash; with the whole church, anonymously, or privately with the leaders.</li>
+        <li>Your church's public page: the welcome, service times, sermons, and leader list a church publishes appear there. Member content &mdash; the directory, chat, messages, questions, and prayer &mdash; never does.</li>
+        <li>Giving and tips: a church's giving button opens the church's own CanadaHelps or Tithely page; the app does not process church donations. The app's optional tip jar is processed by Stripe; we never see or store full card numbers, and we keep only a record of the amount and time of a tip. The app keeps no percentage of a tip &mdash; the whole tip goes to the creator, less Stripe's own processing fee.</li>
+      </ul>
+
+      <h3>Care, in questions</h3>
+      <p>Questions sent to a church's leaders are screened automatically for signs that someone may be thinking of harming themselves. A question that matches is held for the church's leaders, so a person &mdash; not a program &mdash; can respond. Open group chat is conversation between adults and is not screened.</p>
+
+      <h3>Where data lives</h3>
+      <p>Account and group data is stored with Supabase (hosted in the United States), and media such as directory photos and church logos in its storage service. Payments are handled by Stripe under its own privacy policy. Push notifications travel through Expo's notification service and Google's Firebase Cloud Messaging on Android, or Apple's push service on iPhone.</p>
+
+      <h3>Your choices</h3>
+      <p>You can change or remove your directory listing at any time, and leave a church whenever you wish. You can delete your account yourself, immediately, inside the app &mdash; Settings, then Delete my account; the steps, and how to ask by email instead, are on our <a href="/delete-account/">account deletion page</a>. Deleting your account deletes your direct-message conversations with it, for both people in them. You can also ask us to correct your information at any time by emailing <a href="mailto:youth@cbckc.ca">youth@cbckc.ca</a>. If this policy changes in a way that matters, we will update this page and note the new date above.</p>
+    </section>
+
     <footer>
       Your People is being built alongside <a href="https://youryouth.org">Your Youth</a>, a digital home for youth groups.<br>
-      Already part of a church here? <a href="/desk/">Sign in to the church desk</a>.
+      Already part of a church here? <a href="/desk/">Sign in to the church desk</a>.<br>
+      <a href="#privacy">Privacy policy</a> &middot; <a href="/terms/">Terms of use</a> &middot; <a href="/delete-account/">Delete your account</a>
     </footer>
   </div>
 </body>
