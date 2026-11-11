@@ -159,6 +159,21 @@
     font-weight:600;line-height:1.2}
   .mincard .s{color:var(--muted);font-size:14.5px;margin-top:2px}
   .mincard .b{white-space:pre-wrap;margin-top:6px}
+  /* leaders — who a visitor will meet: a name in display type,
+     the title beneath it, one short line in the person's own
+     words, and a photo when the church gave one; the card
+     reads the same with no photo at all */
+  .leaders-grid{display:grid;gap:14px}
+  @media (min-width:640px){.leaders-grid{grid-template-columns:1fr 1fr}}
+  .leadcard{background:var(--card);border:1px solid var(--line);
+    border-top:2px solid var(--green);padding:18px 20px;display:flex;
+    gap:16px;align-items:flex-start}
+  .leadcard img{width:84px;height:84px;border-radius:50%;object-fit:cover;
+    flex:none;background:var(--cream)}
+  .leadcard .t{font-family:"Cormorant Garamond",Georgia,serif;font-size:24px;
+    font-weight:600;line-height:1.2}
+  .leadcard .s{color:var(--muted);font-size:14.5px;margin-top:2px}
+  .leadcard .b{white-space:pre-wrap;margin-top:6px}
   /* ministry editing — homepage edit mode only; these fields
      are never rendered for visitors */
   .min-edit{border:1px dashed var(--green);border-radius:10px;
@@ -379,6 +394,13 @@
         </div>
       </section>
 
+      <section class="block band hidden" id="sec-leaders">
+        <div class="in">
+          <h2 class="display-h" id="leaders-heading">Our pastors</h2>
+          <div class="leaders-grid" id="site-leaders"></div>
+        </div>
+      </section>
+
       <div class="pair" id="pair-give">
         <section class="block hidden" id="sec-give">
           <h2 class="display-h">Give</h2>
@@ -494,6 +516,6 @@
   }, 8000);
 })();
 </script>
-<script src="/site/church-site.js?v=12"></script>
+<script src="/site/church-site.js?v=13"></script>
 </body>
 </html>

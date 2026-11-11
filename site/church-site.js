@@ -92,6 +92,15 @@
    second Get directions button), now carry the name and the
    main service time alone.
 
+   v7 (leaders listing, Nov 10, 2026): after the sermons, a
+   "who you'll meet" section — the leaders the church chose to
+   list (settings.site.leaders, served trimmed and capped by
+   the function as `leaders`, with the section's heading as
+   `leadersTitle`): a name, a title, one short line in the
+   person's own words, and an optional photo. Leader-curated
+   only — nothing is read from membership or the directory —
+   and the section hides entirely when the list is empty.
+
    v6 (findability + socials, Nov 10, 2026): the footer gains
    the church's own social links (the payload's `socials`,
    shaped at the function door and re-checked here) — a quiet
@@ -221,6 +230,45 @@ function ministryCard(m) {
   const line = [m.when, m.place].filter(Boolean).join(' · ');
   if (line) card.appendChild(h('div', 's', line));
   if (m.blurb) card.appendChild(h('div', 'b', m.blurb));
+  return card;
+}
+
+/* Leaders are leader-curated and arrive sanitized from the
+   function; this is the render-side twin of that shaping (the
+   same caps, entries with no name or no title dropped, a photo
+   kept only when it is one of this platform's own site-photo
+   URLs), so an older deployed function can never push an
+   oversized card — or a stranger's image address — onto the
+   page. No contact details exist in this shape at all. */
+const LEADER_PHOTO_MARK = '/storage/v1/object/public/church-site-photos/';
+function cleanLeaders(list) {
+  return (Array.isArray(list) ? list : [])
+    .map((e) => {
+      const photo = String((e && e.photo) || '').trim().slice(0, 600);
+      return {
+        name: String((e && e.name) || '').trim().slice(0, 80),
+        title: String((e && e.title) || '').trim().slice(0, 80),
+        line: String((e && e.line) || '').trim().slice(0, 240),
+        photo: photo.startsWith('https://') && photo.includes(LEADER_PHOTO_MARK) ? photo : '',
+      };
+    })
+    .filter((e) => e.name && e.title)
+    .slice(0, 12);
+}
+function leaderCard(e) {
+  const card = h('div', 'leadcard');
+  if (e.photo) {
+    const img = document.createElement('img');
+    img.src = e.photo;
+    img.alt = e.name;
+    img.addEventListener('error', () => img.remove());
+    card.appendChild(img);
+  }
+  const body = h('div', 'lbody');
+  body.appendChild(h('div', 't', e.name));
+  body.appendChild(h('div', 's', e.title));
+  if (e.line) body.appendChild(h('div', 'b', e.line));
+  card.appendChild(body);
   return card;
 }
 
@@ -500,6 +548,21 @@ function render(data) {
       item.appendChild(h('div', 's', [fmtDay(s.date), s.passageRef].filter(Boolean).join(' · ')));
       box.appendChild(item);
     }
+  }
+
+  // leaders — who a visitor will meet: the church's own curated
+  // list, after the sermons and before the invitation. The
+  // heading is the church's own words when it set one; the
+  // template's plain default otherwise. Empty list — the
+  // section is not on the page at all.
+  const leaders = cleanLeaders(data.leaders);
+  $('sec-leaders').classList.toggle('hidden', leaders.length === 0);
+  if (leaders.length > 0) {
+    const title = typeof data.leadersTitle === 'string' ? data.leadersTitle.trim().slice(0, 60) : '';
+    $('leaders-heading').textContent = title || 'Our pastors';
+    const box = $('site-leaders');
+    box.replaceChildren();
+    for (const e of leaders) box.appendChild(leaderCard(e));
   }
 
   // give — a link, nothing more; hides without one. Two links
