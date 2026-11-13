@@ -14,7 +14,7 @@
 
    Layout (v2, from the Nov 2026 layout research): sticky header,
    hero, visit block, the church's own welcome, announcements,
-   ministries, upcoming events, recent sermons, give, the app
+   ministries, upcoming events, the latest sermon, give, the app
    card, a closing strip, footer. The template supplies ONLY bare
    functional labels — every sentence on the page is the church's
    own, from its data. Sections with no data hide; the hero with
@@ -39,11 +39,12 @@
    from the church's own identity only. The header's second row
    links only to what exists for this church (its Visit link is
    gone as of v5.1 — see below): Announcements scrolls to its
-   section; Sermons and Events go
-   to real sub-pages (/site/sermons.html, /site/events.html,
-   rendered by list-page.js from the same function — full lists,
-   no caps) that carry this church's address (?c= or ?s=) with
-   them. If the church has linked its youth group
+   section; Sermons scrolls to its section too, which shows
+   the latest sermon only (v8, below — there is no public
+   sermon list or sermons page); Events goes to a real
+   sub-page (/site/events.html, rendered by list-page.js from
+   the same function — the full list, no cap) that carries
+   this church's address (?c= or ?s=) with it. If the church has linked its youth group
    (settings.site.linkedYouthCode, served as linkedYouthCode),
    the footer quietly links to that group's page on Your Youth.
 
@@ -112,6 +113,15 @@
    its own title and structured data) is what search engines
    and slow connections meet first, and this renderer takes
    over from it exactly as it does from the shells.
+
+   v8 (latest sermon only, Nov 13, 2026): the founder ruled
+   the public page shows ONE sermon — the latest published —
+   as the featured card, and nothing else: the sermon rows,
+   the "All sermons" link and the sermons sub-page
+   are gone, the section is headed "Latest sermon", and the
+   header's Sermons link scrolls to the section. The function
+   now sends only the latest sermon through this door;
+   signed-in members keep the full list in the app.
 
    Edit-in-place: a signed-in LEADER of this church (the desk
    session carries over — same origin) gets a discreet edit bar
@@ -511,14 +521,15 @@ function render(data) {
     }
   }
 
-  // sermons — the latest featured, up to four more as rows.
+  // sermons — the latest one only (founder ruling, Nov 13,
+  // 2026): the public page shows the church's most recent
+  // published sermon as a single featured card; there is no
+  // public sermon list. Signed-in members keep the full list
+  // in the app.
   $('sec-sermons').classList.toggle('hidden', sermons.length === 0);
   $('nav-sermons').classList.toggle('hidden', sermons.length === 0);
   if (sermons.length > 0) {
-    $('nav-sermons').href = pageUrl('sermons.html');
-    $('sermons-all').href = pageUrl('sermons.html');
-  }
-  if (sermons.length > 0) {
+    $('nav-sermons').href = '#sec-sermons';
     const feat = sermons[0];
     const fbox = $('sermon-featured');
     fbox.replaceChildren();
@@ -532,22 +543,6 @@ function render(data) {
       p.appendChild(a); f.appendChild(p);
     }
     fbox.appendChild(f);
-    const box = $('site-sermons');
-    box.replaceChildren();
-    for (const s of sermons.slice(1, 5)) {
-      const item = h('div', 'row');
-      const t = h('div', 't');
-      if (s.videoUrl) {
-        const a = h('a', null, s.title);
-        a.href = s.videoUrl; a.target = '_blank'; a.rel = 'noopener';
-        t.appendChild(a);
-      } else {
-        t.textContent = s.title;
-      }
-      item.appendChild(t);
-      item.appendChild(h('div', 's', [fmtDay(s.date), s.passageRef].filter(Boolean).join(' · ')));
-      box.appendChild(item);
-    }
   }
 
   // leaders — who a visitor will meet: the church's own curated

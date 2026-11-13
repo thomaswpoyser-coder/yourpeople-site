@@ -1,25 +1,28 @@
 'use strict';
 /* =====================================================================
-   Your People — a church's full sermon / event / ministry list
+   Your People — a church's full event / ministry list
    (sub-pages).
 
-   /site/sermons.html, /site/events.html and /site/ministries.html
-   are the real rooms behind the homepage's capped sections:
-   every published sermon, newest first; every upcoming event,
-   soonest first; every ministry the church listed, in the
-   leaders' chosen order. They are addressed exactly like the
-   homepage — ?c=<join code> or ?s=<slug> — and read from the
-   same church-site Edge Function, asking for the full list
-   (?sermons=1 / ?events=1; ministries ride in the standard
-   payload, already whole at the function's cap of twelve; until
-   the function is redeployed with these, it answers with its
-   standard capped payload and the page shows what it gets).
+   /site/events.html and /site/ministries.html are the real
+   rooms behind the homepage's capped sections: every upcoming
+   event, soonest first; every ministry the church listed, in
+   the leaders' chosen order. They are addressed exactly like
+   the homepage — ?c=<join code> or ?s=<slug> — and read from
+   the same church-site Edge Function, asking for the full list
+   (?events=1; ministries ride in the standard payload, already
+   whole at the function's cap of twelve; until the function
+   is redeployed with these, it answers with its standard
+   capped payload and the page shows what it gets).
+
+   There is deliberately no sermons sub-page: the founder
+   ruled (Nov 13, 2026) that the public site shows only a
+   church's latest sermon, on its homepage — never a list.
 
    Read-only by design: editing lives on the homepage. Brand,
    favicon and graceful states behave exactly as the homepage's;
    the template supplies only bare functional labels, every
-   sermon and event word is the church's own, and there are no
-   gradients anywhere.
+   event and ministry word is the church's own, and there are
+   no gradients anywhere.
 
    The footer carries the same quiet social row as the
    homepage (Nov 10, 2026): the church's own links from the
@@ -68,12 +71,6 @@ function fmtRange(e) {
   }
   return s;
 }
-function fmtDay(iso) {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '';
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
 /* The browser tab carries the church's identity too: its logo
    once the page has loaded, the Your People mark until then and
    for churches with no logo. */
@@ -170,29 +167,6 @@ function resolveLookup() {
   return null;
 }
 
-function renderSermons(data) {
-  const sermons = Array.isArray(data.sermons) ? data.sermons : [];
-  $('list-empty').classList.toggle('hidden', sermons.length > 0);
-  const box = $('list-box');
-  box.replaceChildren();
-  for (const s of sermons) {
-    const item = h('div', 'row');
-    item.appendChild(h('div', 't', s.title));
-    const meta = h('div', 's');
-    const bits = [fmtDay(s.date), s.passageRef].filter(Boolean).join(' · ');
-    if (s.videoUrl) {
-      meta.appendChild(document.createTextNode(bits ? bits + ' · ' : ''));
-      const a = h('a', null, /youtube|youtu\.be|vimeo/i.test(s.videoUrl) ? 'Watch' : 'Listen');
-      a.href = s.videoUrl; a.target = '_blank'; a.rel = 'noopener';
-      meta.appendChild(a);
-    } else {
-      meta.textContent = bits;
-    }
-    item.appendChild(meta);
-    box.appendChild(item);
-  }
-}
-
 /* The ministry card — the twin of the homepage renderer's, so
    a ministry reads the same here as there. */
 function ministryCard(m) {
@@ -232,7 +206,7 @@ function renderEvents(data) {
 
 async function load() {
   const kind = document.body && document.body.dataset ? document.body.dataset.list : '';
-  if (kind !== 'sermons' && kind !== 'events' && kind !== 'ministries') {
+  if (kind !== 'events' && kind !== 'ministries') {
     state('Not switched on yet', 'This church’s site isn’t switched on yet — check back soon.');
     return;
   }
@@ -243,7 +217,7 @@ async function load() {
   }
   let resp;
   try {
-    resp = await fetch(SUPABASE_URL + '/functions/v1/church-site?' + look.query + (kind === 'sermons' ? '&sermons=1' : kind === 'events' ? '&events=1' : ''), {
+    resp = await fetch(SUPABASE_URL + '/functions/v1/church-site?' + look.query + (kind === 'events' ? '&events=1' : ''), {
       headers: { 'apikey': SUPABASE_ANON_KEY },
     });
   } catch (e) {
@@ -275,7 +249,7 @@ async function load() {
     return;
   }
 
-  const label = kind === 'sermons' ? 'Sermons' : kind === 'events' ? 'Events' : 'Ministries';
+  const label = kind === 'events' ? 'Events' : 'Ministries';
   document.title = label + ' — ' + data.name;
   applyBrand(data.brand);
   if (data.logoUrl) setFavicon(data.logoUrl);
@@ -296,8 +270,7 @@ async function load() {
   $('foot-name-2').textContent = data.name;
   renderSocials(data);
 
-  if (kind === 'sermons') renderSermons(data);
-  else if (kind === 'events') renderEvents(data);
+  if (kind === 'events') renderEvents(data);
   else renderMinistries(data);
   show('view-list');
 }
