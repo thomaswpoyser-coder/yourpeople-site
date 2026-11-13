@@ -25,7 +25,7 @@
   a{color:var(--green)}
   .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 
-  /* sticky header — name/logo, Give */
+  /* sticky header — name/logo, Give, Sign in */
   header.top{position:sticky;top:0;z-index:20;background:var(--cream);
     border-bottom:1px solid var(--line)}
   header.top .hwrap{max-width:1080px;margin:0 auto;padding:10px 20px;
@@ -48,6 +48,7 @@
     text-decoration:none;min-height:48px}
   .btn:hover{background:var(--green-deep)}
   .btn.small{padding:8px 16px;min-height:44px}
+  .nav-signin{border-radius:999px;white-space:nowrap}
   .btn.plain{background:transparent;color:var(--green)}
   .btn.plain:hover{background:transparent;color:var(--green-deep)}
 
@@ -299,6 +300,7 @@
         <img id="head-logo" class="hidden" alt="">
         <span class="hname" id="head-name"></span>
         <a class="btn small hidden" id="head-give" href="#" target="_blank" rel="noopener">Give</a>
+        <a class="btn small nav-signin" href="/desk/">Sign in</a>
       </div>
       <nav class="hnav" id="hnav" aria-label="On this page">
         <a href="#sec-news" id="nav-news" class="hidden">Announcements</a>
