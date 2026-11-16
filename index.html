@@ -19,9 +19,7 @@
   .strip strong{letter-spacing:.04em;}
   .strip span{opacity:.85;}
   .wrap{max-width:760px; margin:0 auto; padding:56px 24px 64px; text-align:center;}
-  .mark{width:74px; height:74px; margin:0 auto 18px; border-radius:50%; background:var(--green); color:var(--gold);
-        font-size:38px; line-height:74px; font-family:Georgia,serif;}
-  .wordmark{font-size:30px; letter-spacing:.02em; color:var(--green-deep); font-weight:normal;}
+  .hero-logo{display:block; width:210px; max-width:70vw; height:auto; margin:0 auto;}
   h1{font-size:44px; line-height:1.15; color:var(--green-deep); font-weight:normal; margin:34px 0 18px;}
   h1 .gold{color:var(--gold);}
   p.lede{font-size:19px; color:var(--ink); max-width:620px; margin:0 auto 14px;}
@@ -54,8 +52,10 @@
   .phone-body::-webkit-scrollbar-thumb{background:rgba(250,246,236,.25); border-radius:99px;}
   .phone-body[hidden]{display:none}
   .p-seg{display:flex; gap:7px;}
-  .p-seg span{font-size:11.5px; font-weight:900; padding:6px 12px; border-radius:999px; background:#24402f; color:#a9bfa9;}
-  .p-seg span.act{background:var(--p-primary); color:#fff;}
+  .p-seg button{font:inherit; font-size:11.5px; font-weight:900; padding:6px 12px; border:0; border-radius:999px; background:#24402f; color:#a9bfa9; cursor:pointer;}
+  .p-seg button.act{background:var(--p-primary); color:#fff;}
+  .p-sub{display:grid; gap:11px;}
+  .p-sub[hidden]{display:none;}
   .p-bubble{background:#1a3125; border:1px solid #2a4a38; border-radius:16px; border-bottom-left-radius:5px; padding:11px 13px; font-size:13.5px; font-weight:600; line-height:1.45;}
   .p-bubble .who{display:block; font-size:11px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; color:var(--p-accent); margin-bottom:4px;}
   .give-btn{display:inline-block; margin-top:9px; font-weight:900; font-size:13.5px; background:var(--p-primary); color:#fff; border-radius:999px; padding:8px 16px;}
@@ -90,8 +90,7 @@
   <div class="sister"><img src="assets/your-youth-logo.png" alt="Your Youth logo">A safe app for your youth group? <a href="https://youryouth.org">Your Youth &rarr;</a><a class="nav-signin" href="/desk/">Sign in</a></div>
   <div class="strip"><strong>App coming soon</strong><span>&nbsp;&mdash;&nbsp;Your People is in final testing, launching soon on Android and iPhone.</span></div>
   <div class="wrap">
-    <div class="mark">&#10022;</div>
-    <div class="wordmark">your people</div>
+    <img class="hero-logo" src="assets/your-people-logo.png" alt="Your People">
 
     <h1>A digital home<br>for your <span class="gold">church</span>.</h1>
 
@@ -152,16 +151,26 @@
             <div class="p-ann"><b>Read the whole Bible</b> &mdash; one tap opens the full Bible, in the version your church chose.</div>
           </div>
           <div class="phone-body" data-screen="community" hidden>
-            <div class="p-seg"><span class="act">Chat</span><span>Questions</span><span>Prayer</span></div>
-            <div class="p-bubble"><span class="who">Margaret</span>Supper prep starts at 4 on Saturday &mdash; extra hands welcome in the kitchen.</div>
-            <div class="p-bubble"><span class="who">David</span>Thanks to everyone who brought food bank donations last week.</div>
-            <div class="p-card">
-              <div class="lab">Questions</div>
-              <div class="ev-d" style="font-size:13.5px">Ask your leaders anything &mdash; with your name, or anonymously if you'd rather.</div>
+            <div class="p-seg" role="group" aria-label="Community sections">
+              <button type="button" class="act" data-sub="chat" aria-pressed="true">Chat</button>
+              <button type="button" data-sub="questions" aria-pressed="false">Questions</button>
+              <button type="button" data-sub="prayer" aria-pressed="false">Prayer</button>
             </div>
-            <div class="p-card">
-              <div class="lab">Prayer</div>
-              <div class="ev-d" style="font-size:13.5px">Share a request with the whole church, or privately with the leaders &mdash; your choice, every time.</div>
+            <div class="p-sub" data-subpanel="chat">
+              <div class="p-bubble"><span class="who">Margaret</span>Supper prep starts at 4 on Saturday &mdash; extra hands welcome in the kitchen.</div>
+              <div class="p-bubble"><span class="who">David</span>Thanks to everyone who brought food bank donations last week.</div>
+            </div>
+            <div class="p-sub" data-subpanel="questions" hidden>
+              <div class="p-card">
+                <div class="lab">Questions</div>
+                <div class="ev-d" style="font-size:13.5px">Ask your leaders anything &mdash; with your name, or anonymously if you'd rather.</div>
+              </div>
+            </div>
+            <div class="p-sub" data-subpanel="prayer" hidden>
+              <div class="p-card">
+                <div class="lab">Prayer</div>
+                <div class="ev-d" style="font-size:13.5px">Share a request with the whole church, or privately with the leaders &mdash; your choice, every time.</div>
+              </div>
             </div>
             <div class="p-ann"><b>Private messages:</b> members can also message each other one to one.</div>
           </div>
@@ -253,6 +262,20 @@
         screens.forEach(function(sc){ sc.hidden = sc.getAttribute('data-screen') !== key; });
         tabs.forEach(function(x){
           var on = x === t;
+          x.classList.toggle('act', on);
+          x.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      });
+    });
+
+    var segBtns = document.querySelectorAll('.p-seg button[data-sub]');
+    var subPanels = document.querySelectorAll('.p-sub[data-subpanel]');
+    segBtns.forEach(function(b){
+      b.addEventListener('click', function(){
+        var key = b.getAttribute('data-sub');
+        subPanels.forEach(function(p){ p.hidden = p.getAttribute('data-subpanel') !== key; });
+        segBtns.forEach(function(x){
+          var on = x === b;
           x.classList.toggle('act', on);
           x.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
