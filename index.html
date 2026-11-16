@@ -34,6 +34,16 @@
   .demo-sec h2{font-family:Georgia,'Times New Roman',serif; font-weight:normal; font-size:30px; color:var(--green-deep); text-align:center;}
   .demo-sec .demo-intro{font-family:Helvetica,Arial,sans-serif; font-size:15.5px; color:var(--ink); margin:10px auto 0; max-width:600px;}
   .demo-sec .demo-after{font-family:Helvetica,Arial,sans-serif; font-size:15.5px; color:var(--muted); margin:22px auto 0; max-width:600px;}
+  /* Features / For leaders tabs: a name + one line per feature (Nov 16 pitch research). */
+  .feat-sec{margin:56px auto 0; max-width:640px;}
+  .feat-sec h2{font-family:Georgia,'Times New Roman',serif; font-weight:normal; font-size:30px; color:var(--green-deep); text-align:center;}
+  .ftabs{display:flex; gap:8px; justify-content:center; margin:18px 0 6px;}
+  .ftabs button{font-family:Helvetica,Arial,sans-serif; font-weight:700; font-size:14.5px; padding:8px 20px; border-radius:999px; border:1.5px solid var(--green); background:none; color:var(--green-deep); cursor:pointer;}
+  .ftabs button.act{background:var(--green); color:var(--cream);}
+  .flist{margin:6px auto 0; padding:0; text-align:left; font-family:Helvetica,Arial,sans-serif;}
+  .flist li{list-style:none; padding:11px 4px; border-top:1px solid #E4DFD2; font-size:15.5px;}
+  .flist strong{color:var(--green-deep); font-weight:600;}
+  .fpanel[hidden]{display:none;}
   .phone{
     --p-primary:#2f7a4d; --p-accent:#e6bc55; --p-soft:#2e2b18; --p-banner:#173d2c;
     width:320px; max-width:88vw; margin:28px auto 0; text-align:left;
@@ -201,6 +211,35 @@
       <p class="demo-after">Every church&rsquo;s app wears its own name and colours, drawn from the church itself &mdash; this one wears Riverview&rsquo;s.</p>
     </section>
 
+    <!-- ============ FEATURES ============ -->
+    <section class="feat-sec" id="inside">
+      <h2>What&rsquo;s inside</h2>
+      <div class="ftabs">
+        <button type="button" class="act" data-ftab="features">Features</button>
+        <button type="button" data-ftab="leaders">For leaders</button>
+      </div>
+      <div class="fpanel" data-fpanel="features">
+        <ul class="flist">
+          <li><strong>A living directory</strong> &mdash; members keep their own details current, so it never goes stale.</li>
+          <li><strong>Announcements that land</strong> &mdash; news reaches the whole church in one place.</li>
+          <li><strong>One shared calendar</strong> &mdash; services and events that sync to people&rsquo;s own calendars.</li>
+          <li><strong>Sermons and lessons</strong> &mdash; the teaching, kept where the church can find it again.</li>
+          <li><strong>Prayer, handled with care</strong> &mdash; shared the way the person asking chooses.</li>
+          <li><strong>Private messages</strong> &mdash; members can message each other directly.</li>
+          <li><strong>Weekly bulletins</strong> &mdash; the Sunday sheet, in the app.</li>
+          <li><strong>Giving, one tap away</strong> &mdash; through your church&rsquo;s own giving page.</li>
+        </ul>
+      </div>
+      <div class="fpanel" data-fpanel="leaders" hidden>
+        <ul class="flist">
+          <li><strong>The desk</strong> &mdash; a web workbench for sermons, your site, and the directory.</li>
+          <li><strong>Sermon help</strong> &mdash; extra help with sermons, when you want it.</li>
+          <li><strong>Approvals</strong> &mdash; leaders approve who joins.</li>
+          <li><strong>Your public page</strong> &mdash; your church&rsquo;s own page here, kept current from the desk.</li>
+        </ul>
+      </div>
+    </section>
+
     <section class="policy" id="privacy">
       <h2>Privacy policy</h2>
       <p class="updated">Last updated: November 11, 2026</p>
@@ -293,6 +332,13 @@
       count.textContent = coming ? '25' : '24';
     });
   })();
+
+    // Features / For leaders tabs
+    var fbtns = document.querySelectorAll('.ftabs button');
+    fbtns.forEach(function(b){ b.addEventListener('click', function(){
+      fbtns.forEach(function(x){ x.classList.toggle('act', x === b); });
+      document.querySelectorAll('.fpanel').forEach(function(p){ p.hidden = p.getAttribute('data-fpanel') !== b.getAttribute('data-ftab'); });
+    }); });
 </script>
 </body>
 </html>
