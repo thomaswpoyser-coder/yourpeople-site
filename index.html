@@ -31,14 +31,24 @@
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{background:var(--bg); color:var(--ink); font-family:Georgia,'Times New Roman',serif; line-height:1.55;}
-  .sister{background:var(--surface); border-bottom:1px solid var(--line); text-align:right; padding:8px 18px; font-family:Helvetica,Arial,sans-serif; font-size:14.5px; color:var(--ink-soft);}
-  .sister a{color:var(--gold-deep); text-decoration:none; font-weight:600;}
-  .sister .nav-signin{background:var(--green); color:#FBF6E7; border-radius:999px; padding:4px 14px; margin-left:10px; white-space:nowrap;}
-  .sister img{height:22px; width:22px; border-radius:5px; vertical-align:-6px; margin-right:7px;}
-  .strip{background:var(--green); color:var(--cream-text); text-align:center; padding:10px 16px; font-family:Helvetica,Arial,sans-serif; font-size:15px;}
-  .strip strong{letter-spacing:.04em;}
-  .strip span{opacity:.85;}
-  .strip a.strip-btn{display:inline-block;background:var(--gold);color:var(--green-deep);font-weight:700;text-decoration:none;padding:5px 15px;border-radius:999px;margin-left:10px;white-space:nowrap;}
+  .sister{background:#fff; border-bottom:1px solid #E4DFD2; text-align:right; padding:8px 18px; font-family:Helvetica,Arial,sans-serif; font-size:14.5px; color:#6B6F66;}
+  .sister a{color:#2E493A; text-decoration:none; font-weight:600;}
+  .sister .badge{display:inline-block; width:22px; height:22px; border-radius:50%; background:#2E493A; color:#C9A227; text-align:center; line-height:22px; font-size:13px; vertical-align:-6px; margin-right:7px;}
+  .strip{background:#123324; color:#F2ECDA; text-align:center; padding:12px 16px; font-family:Helvetica,Arial,sans-serif; font-size:15px;}
+  .strip strong{letter-spacing:.02em;}
+  .strip span{opacity:.88;}
+  .strip a.strip-btn{display:inline-block;background:var(--gold);color:var(--green-deep);font-weight:700;text-decoration:none;padding:6px 16px;border-radius:999px;margin-left:10px;white-space:nowrap;}
+  /* ---------- nav (mirrors youryouth.org header) ---------- */
+  .nav{position:sticky; top:0; z-index:40; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--line); font-family:Helvetica,Arial,sans-serif;}
+  .nav-in{max-width:1120px; margin:0 auto; padding:12px 22px; display:flex; align-items:center; gap:26px;}
+  .brand{display:flex; align-items:center; gap:11px; text-decoration:none; color:var(--ink);}
+  .brand img{height:34px; width:auto; flex:none;}
+  .brand span{font-weight:900; font-size:21px; letter-spacing:-.01em; color:var(--green);}
+  @media (prefers-color-scheme: dark){.brand span{color:var(--cream-text);}}
+  .btn-solid{background:var(--green); color:#FBF6E7; text-decoration:none; font-weight:700;}
+  .btn-solid:hover{background:var(--green-deep);}
+  .nav-signin{margin-left:auto; padding:9px 20px; font-size:15px; border-radius:999px; white-space:nowrap;}
+  #beta{scroll-margin-top:76px;}
   .wrap{max-width:760px; margin:0 auto; padding:56px 24px 64px; text-align:center;}
   .hero-logo{display:block; width:210px; max-width:70vw; height:auto; margin:0 auto;}
   .hero-art{margin:36px auto 0; border-radius:28px; overflow:hidden; box-shadow:var(--shadow); border:1px solid var(--line);}
@@ -132,7 +142,17 @@
 </head>
 <body>
   <div class="strip"><strong>Your People is in open beta.</strong><span>&nbsp;We&rsquo;re in final testing, and testers get in free and shape what launches.</span><a class="strip-btn" href="#beta">Join the beta</a></div>
-  <div class="sister"><img src="assets/your-youth-logo.png" alt="Your Youth logo">A safe app for your youth group? <a href="https://youryouth.org">Your Youth &rarr;</a><a class="nav-signin" href="/desk/">Sign in</a></div>
+  <div class="sister"><span class="badge">&#10022;</span>A safe app for your youth group? <a href="https://youryouth.org">Your Youth &rarr;</a></div>
+
+  <header class="nav">
+    <div class="nav-in">
+      <a class="brand" href="/" aria-label="Your People — home">
+        <img src="/assets/your-people-mark.png" alt="" width="48" height="34">
+        <span>your people</span>
+      </a>
+      <a class="btn-solid nav-signin" href="/desk/">Sign in</a>
+    </div>
+  </header>
 
   <div class="wrap">
     <img class="hero-logo" src="assets/your-people-logo.png" alt="Your People">
