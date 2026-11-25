@@ -5,50 +5,70 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your People — a digital home for your church</title>
 <meta name="description" content="Your People gives your church one simple digital home: a living directory, announcements that reach everyone, a shared calendar, sermons, prayer and giving. App coming soon.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/svg+xml" href="/assets/your-people-icon.svg">
 <style>
   :root{
-    --cream:#FAF8F3; --green:#2E493A; --green-deep:#22382C; --gold:#C9A227; --ink:#2B2B28; --muted:#6B6F66;
+    --bg:#FAF6EC; --bg-soft:#F3EDDA; --surface:#FFFDF6;
+    --ink:#22332A; --ink-soft:#4C5B50;
+    --green:#1E4634; --green-deep:#123324; --green-band:#173D2B;
+    --gold:#D99A26; --gold-deep:#B97E14; --gold-soft:#F5E3B3;
+    --line:#E4D9BE; --cream-text:#F7F1DE; --cream-soft:#D9E2D2;
+    --shadow:0 18px 44px rgba(24,51,36,.14);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0D2016; --bg-soft:#0A1A11; --surface:#14301F;
+      --ink:#F2ECDA; --ink-soft:#B9C8B4;
+      --green:#2E7D54; --green-deep:#0A1A11; --green-band:#0A1A11;
+      --gold:#E8B84B; --gold-deep:#E8B84B; --gold-soft:#3A2F14;
+      --line:#274734; --shadow:0 18px 44px rgba(0,0,0,.45);
+    }
+    h1, .demo-sec h2, .feat-sec h2, .beta-sec h2, .policy h2{color:var(--cream-text);}
+    .features li strong, .flist strong, .beta-card h3, .policy h3{color:var(--ink);}
+    .ftabs button{color:var(--cream-text); border-color:var(--ink-soft);}
+    .ftabs button.act{background:var(--green); border-color:var(--green); color:var(--cream-text);}
   }
   *{box-sizing:border-box; margin:0; padding:0;}
-  body{background:var(--cream); color:var(--ink); font-family:Georgia,'Times New Roman',serif; line-height:1.55;}
-  .sister{background:#fff; border-bottom:1px solid #E4DFD2; text-align:right; padding:8px 18px; font-family:Helvetica,Arial,sans-serif; font-size:14.5px; color:var(--muted);}
-  .sister a{color:var(--green); text-decoration:none; font-weight:600;}
-  .sister .nav-signin{background:var(--green); color:var(--cream); border-radius:999px; padding:4px 14px; margin-left:10px; white-space:nowrap;}
+  body{background:var(--bg); color:var(--ink); font-family:Georgia,'Times New Roman',serif; line-height:1.55;}
+  .sister{background:var(--surface); border-bottom:1px solid var(--line); text-align:right; padding:8px 18px; font-family:Helvetica,Arial,sans-serif; font-size:14.5px; color:var(--ink-soft);}
+  .sister a{color:var(--gold-deep); text-decoration:none; font-weight:600;}
+  .sister .nav-signin{background:var(--green); color:#FBF6E7; border-radius:999px; padding:4px 14px; margin-left:10px; white-space:nowrap;}
   .sister img{height:22px; width:22px; border-radius:5px; vertical-align:-6px; margin-right:7px;}
-  .strip{background:var(--green); color:var(--cream); text-align:center; padding:10px 16px; font-family:Helvetica,Arial,sans-serif; font-size:15px;}
+  .strip{background:var(--green); color:var(--cream-text); text-align:center; padding:10px 16px; font-family:Helvetica,Arial,sans-serif; font-size:15px;}
   .strip strong{letter-spacing:.04em;}
   .strip span{opacity:.85;}
   .wrap{max-width:760px; margin:0 auto; padding:56px 24px 64px; text-align:center;}
   .hero-logo{display:block; width:210px; max-width:70vw; height:auto; margin:0 auto;}
-  h1{font-size:44px; line-height:1.15; color:var(--green-deep); font-weight:normal; margin:34px 0 18px;}
-  h1 .gold{color:var(--gold);}
+  h1{font-size:44px; line-height:1.15; color:var(--green); font-weight:normal; margin:34px 0 18px;}
+  h1 .gold{color:var(--gold-deep);}
   p.lede{font-size:19px; color:var(--ink); max-width:620px; margin:0 auto 14px;}
-  p.sub{font-size:16.5px; color:var(--muted); max-width:600px; margin:0 auto;}
+  p.sub{font-size:16.5px; color:var(--ink-soft); max-width:600px; margin:0 auto;}
   .features{margin:44px auto 0; max-width:640px; text-align:left; font-family:Helvetica,Arial,sans-serif;}
-  .features li{list-style:none; padding:13px 4px; border-top:1px solid #E4DFD2; font-size:16px;}
-  .features li strong{color:var(--green-deep); font-weight:600;}
-  .page-note{margin:40px auto 0; max-width:620px; background:#fff; border:1px solid #E4DFD2; border-radius:10px; padding:20px 22px; font-size:16px;}
-  .page-note code{font-family:ui-monospace,Menlo,Consolas,monospace; background:var(--cream); padding:2px 6px; border-radius:5px; color:var(--green-deep);}
+  .features li{list-style:none; padding:13px 4px; border-top:1px solid var(--line); font-size:16px;}
+  .features li strong{color:var(--green); font-weight:600;}
+  .page-note{margin:40px auto 0; max-width:620px; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:20px 22px; font-size:16px;}
+  .page-note code{font-family:ui-monospace,Menlo,Consolas,monospace; background:var(--bg-soft); padding:2px 6px; border-radius:5px; color:var(--gold-deep);}
   /* ---------- phone demo (ported from youryouth.org; Riverview palette, dark) ---------- */
   .demo-sec{margin:56px auto 0; max-width:640px;}
-  .demo-sec h2{font-family:Georgia,'Times New Roman',serif; font-weight:normal; font-size:30px; color:var(--green-deep); text-align:center;}
+  .demo-sec h2{font-family:Georgia,'Times New Roman',serif; font-weight:normal; font-size:30px; color:var(--green); text-align:center;}
   .demo-sec .demo-intro{font-family:Helvetica,Arial,sans-serif; font-size:15.5px; color:var(--ink); margin:10px auto 0; max-width:600px;}
-  .demo-sec .demo-after{font-family:Helvetica,Arial,sans-serif; font-size:15.5px; color:var(--muted); margin:22px auto 0; max-width:600px;}
+  .demo-sec .demo-after{font-family:Helvetica,Arial,sans-serif; font-size:15.5px; color:var(--ink-soft); margin:22px auto 0; max-width:600px;}
   /* Features / For leaders tabs: a name + one line per feature (Nov 16 pitch research). */
   .feat-sec{margin:56px auto 0; max-width:640px;}
-  .feat-sec h2{font-family:Georgia,'Times New Roman',serif; font-weight:normal; font-size:30px; color:var(--green-deep); text-align:center;}
+  .feat-sec h2{font-family:Georgia,'Times New Roman',serif; font-weight:normal; font-size:30px; color:var(--green); text-align:center;}
   .ftabs{display:flex; gap:8px; justify-content:center; margin:18px 0 6px;}
-  .ftabs button{font-family:Helvetica,Arial,sans-serif; font-weight:700; font-size:14.5px; padding:8px 20px; border-radius:999px; border:1.5px solid var(--green); background:none; color:var(--green-deep); cursor:pointer;}
-  .ftabs button.act{background:var(--green); color:var(--cream);}
+  .ftabs button{font-family:Helvetica,Arial,sans-serif; font-weight:700; font-size:14.5px; padding:8px 20px; border-radius:999px; border:1.5px solid var(--green); background:none; color:var(--green); cursor:pointer;}
+  .ftabs button.act{background:var(--green); color:var(--cream-text);}
   .flist{margin:6px auto 0; padding:0; text-align:left; font-family:Helvetica,Arial,sans-serif;}
-  .flist li{list-style:none; padding:11px 4px; border-top:1px solid #E4DFD2; font-size:15.5px;}
-  .flist strong{color:var(--green-deep); font-weight:600;}
+  .flist li{list-style:none; padding:11px 4px; border-top:1px solid var(--line); font-size:15.5px;}
+  .flist strong{color:var(--green); font-weight:600;}
   .fpanel[hidden]{display:none;}
   .phone{
     --p-primary:#2f7a4d; --p-accent:#e6bc55; --p-soft:#2e2b18; --p-banner:#173d2c;
     width:320px; max-width:88vw; margin:28px auto 0; text-align:left;
     border-radius:44px; background:#101010; padding:11px;
-    box-shadow:0 18px 44px rgba(34,56,44,.28);
+    box-shadow:var(--shadow);
     font-family:Helvetica,Arial,sans-serif;
   }
   /* the phone never resizes between tabs (founder, Nov 16, 2026): fixed screen height; a screen that needs more room scrolls inside its body */
@@ -87,24 +107,24 @@
   .phone-tabs .tab.act{color:var(--p-accent);}
   /* Join the test: two phone cards side by side, stacked on narrow screens. */
   .beta-sec{margin:56px auto 0; max-width:640px;}
-  .beta-sec h2{font-family:Georgia,'Times New Roman',serif; font-weight:normal; font-size:30px; color:var(--green-deep); text-align:center;}
+  .beta-sec h2{font-family:Georgia,'Times New Roman',serif; font-weight:normal; font-size:30px; color:var(--green); text-align:center;}
   .beta-sec .beta-lede{font-family:Helvetica,Arial,sans-serif; font-size:15.5px; color:var(--ink); margin:10px auto 0; max-width:600px;}
   .beta-cards{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:22px; text-align:left;}
   @media (max-width:560px){.beta-cards{grid-template-columns:1fr;}}
-  .beta-card{background:#fff; border:1px solid #E4DFD2; border-radius:10px; padding:18px 20px; font-family:Helvetica,Arial,sans-serif; font-size:15.5px;}
-  .beta-card h3{font-size:16px; color:var(--green-deep); margin:0 0 8px;}
+  .beta-card{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:18px 20px; font-family:Helvetica,Arial,sans-serif; font-size:15.5px;}
+  .beta-card h3{font-size:16px; color:var(--green); margin:0 0 8px;}
   .beta-card p{margin:0 0 9px;}
   .beta-card p:last-child{margin-bottom:0;}
-  .beta-card a{color:var(--green); font-weight:600;}
+  .beta-card a{color:var(--gold-deep); font-weight:600;}
   .policy{margin:56px auto 0; max-width:640px; text-align:left; font-family:Helvetica,Arial,sans-serif; font-size:15.5px;}
-  .policy h2{font-family:Georgia,'Times New Roman',serif; font-weight:normal; font-size:30px; color:var(--green-deep); text-align:center;}
-  .policy .updated{text-align:center; color:var(--muted); font-size:14px; margin:6px 0 18px;}
-  .policy h3{font-size:16px; color:var(--green-deep); margin:22px 0 6px;}
+  .policy h2{font-family:Georgia,'Times New Roman',serif; font-weight:normal; font-size:30px; color:var(--green); text-align:center;}
+  .policy .updated{text-align:center; color:var(--ink-soft); font-size:14px; margin:6px 0 18px;}
+  .policy h3{font-size:16px; color:var(--green); margin:22px 0 6px;}
   .policy p{margin:0 0 10px;}
   .policy ul{margin:0 0 10px; padding-left:20px;}
   .policy li{margin:5px 0;}
-  footer{margin-top:54px; font-family:Helvetica,Arial,sans-serif; font-size:14px; color:var(--muted);}
-  footer a{color:var(--green); text-decoration:none; border-bottom:1px solid var(--gold);}
+  footer{margin-top:54px; font-family:Helvetica,Arial,sans-serif; font-size:14px; color:var(--ink-soft);}
+  footer a{color:var(--gold-deep); text-decoration:none; border-bottom:1px solid var(--gold);}
 </style>
 </head>
 <body>
